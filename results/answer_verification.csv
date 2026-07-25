@@ -1,0 +1,5 @@
+verifier,quiz,answer_verified,ok,n
+Qwen자체검증,qwen-3b+RAG,0.6,3,5
+Qwen자체검증,qwen-3b(baseline),0.4,2,5
+Solar교차검증,qwen-3b+RAG,0.6,3,5
+Solar교차검증,qwen-3b(baseline),0.6,3,5

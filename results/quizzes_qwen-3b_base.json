@@ -1,0 +1,77 @@
+[
+  {
+    "quiz_id": "quiz-001",
+    "type": "multiple_choice",
+    "question": "크레인 작업 중 위험 요인으로 가장 먼저 생각해야 하는 것은 무엇인가?",
+    "choices": [
+      "크레인의 무게 제한을 초과하여 작업",
+      "크레인 작업 시 안전장비 미착용",
+      "크레인 작업 시 주변 환경 확인 미흡",
+      "크레인 작업 시 작업자의 경험 부족"
+    ],
+    "answer": 1,
+    "explanation": "크레인 작업 시 안전장비 미착용은 가장 중요한 위험 요인이며, 이를 방지하기 위해 항상 안전장비를 착용해야 합니다.",
+    "evidence": "안전교육 자료에 따르면, 안전장비 미착용은 크레인 작업 중 가장 큰 위험 요인입니다.",
+    "parse_ok": true
+  },
+  {
+    "quiz_id": "quiz-002",
+    "type": "multiple_choice",
+    "question": "Which of the following is NOT a common cause of press-related accidents?",
+    "choices": [
+      "Overloading press machinery",
+      "Improper maintenance of press equipment",
+      "Operating under high pressure conditions",
+      "Using outdated safety protocols"
+    ],
+    "answer": 3,
+    "explanation": "Using outdated safety protocols is not a common cause of press-related accidents. Proper maintenance, adherence to safety protocols, and avoiding overloading or operating under high pressure are key factors in preventing accidents.",
+    "evidence": "In a study conducted by the Occupational Safety and Health Administration (OSHA), it was found that improper maintenance and outdated safety protocols were not significant contributors to press-related accidents.",
+    "parse_ok": true
+  },
+  {
+    "quiz_id": "quiz-003",
+    "type": "multiple_choice",
+    "question": "하인리히 법칙에 따르면, 재해 발생 비율은 300대 29대 1로 나타납니다. 이 비율은 다음과 같은 이유로 설명됩니다. 어떤 것이 맞습니까?",
+    "choices": [
+      "재해 발생과 관련 없는 사소한 행동들이 300건, 재해를 초래하는 행동들이 29건으로 분류됩니다.",
+      "재해를 초래하는 행동들이 300건, 재해를 방지하기 위한 조치들이 29건으로 분류됩니다.",
+      "재해를 방지하기 위한 조치들이 300건, 재해를 방지하지 못한 행동들이 29건으로 분류됩니다.",
+      "재해를 방지하기 위한 조치들이 300건, 재해를 방지하지 못한 행동들이 29건으로 분류됩니다."
+    ],
+    "answer": 3,
+    "explanation": "하인리히 법칙은 재해 발생과 관련 없는 사소한 행동들이 300건, 재해를 초래하는 행동들이 29건으로 분류된다는 것을 의미합니다. 이는 재해를 방지하기 위한 조치들이 300건, 재해를 방지하지 못한 행동들이 29건으로 분류되는 것을 의미합니다.",
+    "evidence": "하인리히 법칙은 재해 발생과 관련 없는 사소한 행동들이 300건, 재해를 초래하는 행동들이 29건으로 분류된다는 것을 의미합니다. 이는 재해를 방지하기 위한 조치들이 300건, 재해를 방지하지 못한 행동들이 29건으로 분류되는 것을 의미합니다.",
+    "parse_ok": true
+  },
+  {
+    "quiz_id": "quiz-004",
+    "type": "multiple_choice",
+    "question": "지게차 작업 중 가장 주의해야 할 위험 요소는 무엇인가?",
+    "choices": [
+      "교통사고",
+      "물리적 부상",
+      "화재",
+      "환경오염"
+    ],
+    "answer": 0,
+    "explanation": "교통사고는 지게차 작업 중 가장 일반적인 위험이며, 다른 선택지들은 지게차 작업과 직접적으로 관련이 없습니다.",
+    "evidence": "교통사고는 지게차 작업 중 발생하는 주요 위험 중 하나입니다.",
+    "parse_ok": true
+  },
+  {
+    "quiz_id": "quiz-005",
+    "type": "multiple_choice",
+    "question": "MSDS는 무엇을 제공하는 문서인가요?",
+    "choices": [
+      "물질의 생산 공정 설명",
+      "물질의 사용 방법 설명",
+      "물질의 안전 정보와 조작 지침",
+      "물질의 환경적 영향 평가"
+    ],
+    "answer": 2,
+    "explanation": "MSDS는 물질의 안전 정보와 조작 지침을 제공합니다.",
+    "evidence": "MSDS는 물질의 안전한 사용을 위해 필요한 정보를 제공하는 문서입니다.",
+    "parse_ok": true
+  }
+]
