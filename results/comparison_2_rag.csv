@@ -1,0 +1,3 @@
+label,json_ok,grounded,bertscore,sec_per_quiz,n
+qwen-3b+RAG,1.0,0.777,0.651,202.5,5
+qwen-3b(baseline),1.0,0.167,0.609,176.83,5

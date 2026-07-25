@@ -1,0 +1,101 @@
+[
+  {
+    "quiz_id": "quiz-001",
+    "type": "multiple_choice",
+    "question": "크레인 작업 시 가장 중요한 위험발생요인은 무엇입니까?",
+    "choices": [
+      "운반물 편하중",
+      "로프 파단",
+      "보수 및 수리",
+      "추락"
+    ],
+    "answer": 0,
+    "explanation": "운반물 편하중은 크레인 작업 중 사고를 일으키는 주요 요인이 됩니다.",
+    "evidence": "자료 1: 크레인의 위험발생 요인 | 사고 유형 | 대책",
+    "source": {
+      "file": "자료 1",
+      "slide": 38,
+      "chunk_id": "c0089"
+    },
+    "parse_ok": true
+  },
+  {
+    "quiz_id": "quiz-002",
+    "type": "multiple_choice",
+    "question": "2015년 7월에 발생한 프레스 작업 중 재해 사례는 다음과 같습니다.",
+    "choices": [
+      "일반적인 작업 중에 프레스를 잘못 조작하여 금형에 협착",
+      "자동화된 로봇과의 충돌로 인한 피해",
+      "전원 차단 시 발생한 금형 파손",
+      "직접 금형을 조작하는 직원의 손상"
+    ],
+    "answer": 0,
+    "explanation": "피자재 금형 사이에 상체를 넣어 금형 점검을 하였으며, 광축센서가 설치되어 있었으나 피재자는 센서 내부에 위치하여 협착을 일으켰습니다.",
+    "evidence": "자료 1: 2015.07 부산시 기장군 자동차 부품공장 피자재 금형 사이에 상체 넣어 금형 점검\n동료 작업자가 프레스를 조작하여 피재자의 상체가 금형에 협착\n광축센서가 설치되어 있었으나 피재자는 센서 내부에 위치",
+    "source": {
+      "file": "자료 1",
+      "slide": 39,
+      "chunk_id": "c0093"
+    },
+    "parse_ok": true
+  },
+  {
+    "quiz_id": "quiz-003",
+    "type": "multiple_choice",
+    "question": "하인리히 법칙에 따르면, 중대재해(Major Injury)가 발생하기 전에 얼마나 많은 사고들이 발생해야 하는지를 설명합니다?",
+    "choices": [
+      "1",
+      "29",
+      "300"
+    ],
+    "answer": 300,
+    "explanation": "하인리히 법칙에 따르면, 작은 사고들 이후에는 반드시 중대한 사고가 발생한다.",
+    "evidence": "자료 1: 사고발생 이론 ②",
+    "source": {
+      "file": "자료 1",
+      "slide": 36,
+      "chunk_id": "c0083"
+    },
+    "parse_ok": true
+  },
+  {
+    "quiz_id": "quiz-004",
+    "type": "multiple_choice",
+    "question": "지게차 작업 시 가장 중요한 위험요소는 무엇일까요?",
+    "choices": [
+      "화물 적재 불량",
+      "급가속/급선회",
+      "포크 승강작용",
+      "현장 내 위험요소"
+    ],
+    "answer": 0,
+    "explanation": "화물 적재 불량은 지게차 작업에서 발생할 수 있지만, 지게차 작업 시 가장 중요한 위험요소는 '급가속/급선회'입니다.",
+    "evidence": "자료 2: 지게차(전동차)의 위험발생 요인 | 사고 유형 | 대책",
+    "source": {
+      "file": "자료 1",
+      "slide": 37,
+      "chunk_id": "c0087"
+    },
+    "parse_ok": true
+  },
+  {
+    "quiz_id": "quiz-005",
+    "type": "multiple_choice",
+    "question": "MSDS는 무엇을 제공하는 문서인가?",
+    "choices": [
+      "직무 관련 정보",
+      "공장 내 위험 요소",
+      "재해 사례",
+      "MSDS: Material Safety Data Sheet"
+    ],
+    "answer": 4,
+    "explanation": "MSDS는 'Material Safety Data Sheet'의 약자로, 제품에 대한 안전 및 보건 정보를 제공합니다.",
+    "evidence": "자료 1: 자료에서 MSDS는 'Material Safety Data Sheet'이라고 명시되어 있습니다.",
+    "source": {
+      "file": "자료 1",
+      "slide": 40,
+      "chunk_id": "c0094"
+    },
+    "parse_ok": true
+  }
+]

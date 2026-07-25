@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# 대용량 원본 데이터 (PPT 등) - 깃에 올리지 않음
+/data/
+*.pptx
+
+# 생성되는 벡터DB (각자 실행 시 재생성)
+src/chroma_store/
+chroma_store/

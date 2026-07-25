@@ -7,3 +7,10 @@ sentence-transformers>=3.0.0   # ProductionEmbedder (intfloat/multilingual-e5-sm
 transformers>=4.44.0            # generator.py (Qwen2.5-1.5B-Instruct)
 torch>=2.3.0
 bert-score>=0.3.13               # evaluator.bert_score_eval
+
+# --- C 담당(LangChain 버전 생성기) ---
+python-dotenv>=1.0.0             # .env 에서 API 키 로딩
+langchain-core>=0.3.0            # generator_lc.py (프롬프트/파서)
+langchain-upstage>=0.4.0         # ChatUpstage (업스테이지 Solar API)
+langchain-huggingface>=0.1.0     # HuggingFacePipeline/ChatHuggingFace (로컬 Qwen)
+# bitsandbytes>=0.43.0           # (선택) 7B를 8GB VRAM에 올릴 때 4bit 양자화용
