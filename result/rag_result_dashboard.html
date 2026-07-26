@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAG 청킹 평가 및 퀴즈 결과</title>
+  <style>
+    :root {
+      --ink:#18212f; --muted:#667085; --line:#dce3ed; --surface:#fff;
+      --canvas:#f3f6fa; --brand:#3157d5; --correct:#18794e; --correct-bg:#eaf8f0;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; color:var(--ink); background:var(--canvas);
+      font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif;
+    }
+    main { width:min(1440px,94vw); margin:46px auto 80px; }
+    header { margin-bottom:38px; }
+    h1 { margin:0 0 8px; font-size:clamp(28px,3vw,44px); }
+    h2 { margin:0 0 8px; font-size:26px; }
+    h3 { margin:0; }
+    .subtitle,.muted,small { color:var(--muted); }
+    section { margin-top:42px; }
+    .section-head { margin-bottom:20px; }
+    .section-head p { color:var(--muted); margin:6px 0 0; }
+    .score-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px;
+    }
+    .score-card,.quiz-card,.stats-chart,.notice {
+      background:var(--surface); border:1px solid var(--line); border-radius:17px;
+      box-shadow:0 7px 24px rgba(33,45,71,.055);
+    }
+    .score-card { padding:20px; }
+    .score-head { display:flex; justify-content:space-between; gap:12px; margin-bottom:20px; }
+    .score-head span { color:var(--muted); font-size:12px; }
+    .metric { margin-top:15px; }
+    .metric-label,.mini-label { display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px; }
+    .metric-label span,.mini-label span { color:var(--muted); }
+    .track { height:9px; border-radius:999px; background:#edf0f5; overflow:hidden; }
+    .fill { height:100%; border-radius:inherit; }
+    .rank-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr));
+      gap:16px; margin-top:18px;
+    }
+    .rank-card {
+      padding:20px; background:var(--surface); border:1px solid var(--line);
+      border-radius:17px;
+    }
+    .rank-track {
+      display:flex; height:18px; overflow:hidden; border-radius:999px;
+      background:#edf0f5; margin:17px 0 13px;
+    }
+    .rank-segment { height:100%; }
+    .rank-legend { display:flex; flex-wrap:wrap; gap:8px 14px; color:var(--muted); font-size:12px; }
+    .rank-legend span { display:flex; align-items:center; gap:5px; }
+    .rank-legend i { width:8px; height:8px; border-radius:50%; }
+    .rank-legend b { color:var(--ink); }
+    .stats-chart { padding:20px; margin-top:18px; }
+    .stat-row {
+      display:grid; grid-template-columns:140px 1fr 1fr; align-items:center;
+      gap:22px; padding:14px 0; border-bottom:1px solid var(--line);
+    }
+    .stat-row:last-child { border-bottom:0; }
+    .table-wrap {
+      overflow-x:auto; margin-top:18px; background:var(--surface);
+      border:1px solid var(--line); border-radius:14px;
+    }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th,td { padding:13px 16px; border-bottom:1px solid var(--line); text-align:left; }
+    th { color:var(--muted); background:#f9fafc; white-space:nowrap; }
+    tr:last-child td { border-bottom:0; }
+    .detail-panel {
+      margin-top:18px; background:var(--surface); border:1px solid var(--line);
+      border-radius:14px; overflow:hidden;
+    }
+    .detail-panel summary { padding:16px 18px; cursor:pointer; font-weight:750; }
+    .detail-panel .table-wrap { margin:0; border:0; border-top:1px solid var(--line); border-radius:0; }
+    .detail-table table { min-width:1120px; }
+    .query-cell { min-width:320px; }
+    .rank-pill { display:inline-block; padding:4px 7px; border-radius:999px; font-size:11px; font-weight:800; }
+    .rank-1 { color:#2347bd; background:#eaf0ff; }
+    .rank-2 { color:#7042c2; background:#f1eafe; }
+    .rank-3 { color:#087d69; background:#e5f8f3; }
+    .rank-miss { color:#687386; background:#edf0f4; }
+    .slides { display:block; margin-top:5px; white-space:nowrap; }
+    .quiz-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:20px; }
+    .quiz-card { padding:24px; }
+    .quiz-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+    .quiz-head h3 { margin-top:4px; }
+    .type {
+      color:var(--brand); background:#edf1ff; border-radius:999px;
+      padding:7px 10px; font-size:12px; font-weight:700;
+    }
+    .question { margin:23px 0 17px; font-size:20px; font-weight:750; line-height:1.45; }
+    .choices { list-style:none; padding:0; margin:0 0 22px; display:grid; gap:9px; }
+    .choice {
+      display:flex; align-items:center; gap:10px; padding:11px 12px;
+      border:1px solid var(--line); border-radius:10px;
+    }
+    .choice.correct { border-color:#83c5a2; background:var(--correct-bg); color:var(--correct); }
+    .number {
+      display:grid; place-items:center; min-width:25px; height:25px;
+      border-radius:50%; color:#fff; background:#8190a8; font-size:12px; font-weight:700;
+    }
+    .correct .number { background:var(--correct); }
+    .badge { margin-left:auto; font-size:11px; font-weight:800; }
+    dl { display:grid; grid-template-columns:52px 1fr; gap:11px 12px; margin:0; line-height:1.55; }
+    dt { color:var(--muted); font-size:13px; font-weight:700; }
+    dd { margin:0; font-size:14px; }
+    dd.answer { color:var(--correct); font-weight:800; }
+    .source {
+      display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; padding-top:16px;
+      border-top:1px solid var(--line); color:var(--muted); font-size:12px;
+    }
+    .source span,.source code { background:#f4f6f9; border-radius:7px; padding:6px 8px; }
+    code { font-family:Consolas,monospace; font-size:12px; }
+    .notice { padding:20px; color:var(--muted); }
+    @media (max-width:720px) {
+      .stat-row { grid-template-columns:1fr; gap:10px; }
+      .quiz-grid { grid-template-columns:1fr; }
+      main { margin-top:28px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>RAG 실험 결과 대시보드</h1>
+    <p class="subtitle">청킹 전략별 검색 품질과 생성된 퀴즈를 함께 비교합니다.</p>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>1. 청킹 방법별 평가점수</h2>
+      <p>동일한 평가 질문과 검색 조건에서 Recall, MRR, Context Precision을 비교합니다.</p>
+    </div>
+    <div class="score-grid">
+            <article class="score-card">
+              <div class="score-head">
+                <h3>recursive</h3>
+                <span>100문항 · 461 chunks</span>
+              </div>
+              
+      <div class="metric">
+        <div class="metric-label"><span>recall@3</span><strong>0.920</strong></div>
+        <div class="track"><div class="fill" style="width:92.00%;background:#3157d5"></div></div>
+      </div>
+    
+              
+      <div class="metric">
+        <div class="metric-label"><span>MRR</span><strong>0.840</strong></div>
+        <div class="track"><div class="fill" style="width:84.00%;background:#8b5cf6"></div></div>
+      </div>
+    
+              
+      <div class="metric">
+        <div class="metric-label"><span>context_precision@3</span><strong>0.307</strong></div>
+        <div class="track"><div class="fill" style="width:30.67%;background:#08a88a"></div></div>
+      </div>
+    
+            </article>
+            
+            <article class="score-card">
+              <div class="score-head">
+                <h3>sentence_pack</h3>
+                <span>100문항 · 275 chunks</span>
+              </div>
+              
+      <div class="metric">
+        <div class="metric-label"><span>recall@3</span><strong>0.900</strong></div>
+        <div class="track"><div class="fill" style="width:90.00%;background:#3157d5"></div></div>
+      </div>
+    
+              
+      <div class="metric">
+        <div class="metric-label"><span>MRR</span><strong>0.800</strong></div>
+        <div class="track"><div class="fill" style="width:80.00%;background:#8b5cf6"></div></div>
+      </div>
+    
+              
+      <div class="metric">
+        <div class="metric-label"><span>context_precision@3</span><strong>0.300</strong></div>
+        <div class="track"><div class="fill" style="width:30.00%;background:#08a88a"></div></div>
+      </div>
+    
+            </article>
+            
+            <article class="score-card">
+              <div class="score-head">
+                <h3>slide_aware</h3>
+                <span>100문항 · 266 chunks</span>
+              </div>
+              
+      <div class="metric">
+        <div class="metric-label"><span>recall@3</span><strong>0.910</strong></div>
+        <div class="track"><div class="fill" style="width:91.00%;background:#3157d5"></div></div>
+      </div>
+    
+              
+      <div class="metric">
+        <div class="metric-label"><span>MRR</span><strong>0.825</strong></div>
+        <div class="track"><div class="fill" style="width:82.50%;background:#8b5cf6"></div></div>
+      </div>
+    
+              
+      <div class="metric">
+        <div class="metric-label"><span>context_precision@3</span><strong>0.303</strong></div>
+        <div class="track"><div class="fill" style="width:30.33%;background:#08a88a"></div></div>
+      </div>
+    
+            </article>
+            
+            <article class="score-card">
+              <div class="score-head">
+                <h3>title_body</h3>
+                <span>100문항 · 292 chunks</span>
+              </div>
+              
+      <div class="metric">
+        <div class="metric-label"><span>recall@3</span><strong>0.890</strong></div>
+        <div class="track"><div class="fill" style="width:89.00%;background:#3157d5"></div></div>
+      </div>
+    
+              
+      <div class="metric">
+        <div class="metric-label"><span>MRR</span><strong>0.800</strong></div>
+        <div class="track"><div class="fill" style="width:80.00%;background:#8b5cf6"></div></div>
+      </div>
+    
+              
+      <div class="metric">
+        <div class="metric-label"><span>context_precision@3</span><strong>0.297</strong></div>
+        <div class="track"><div class="fill" style="width:29.67%;background:#08a88a"></div></div>
+      </div>
+    
+            </article>
+            </div>
+    <div class="table-wrap"><table><thead><tr><th>청킹 방법</th><th>청크 수</th><th>평균 길이</th><th>recall@3</th><th>MRR</th><th>context_precision@3</th></tr></thead><tbody><tr><td><strong>recursive</strong></td><td>461</td><td>131.3</td><td>0.920</td><td>0.840</td><td>0.307</td></tr><tr><td><strong>sentence_pack</strong></td><td>275</td><td>199.1</td><td>0.900</td><td>0.800</td><td>0.300</td></tr><tr><td><strong>slide_aware</strong></td><td>266</td><td>218.3</td><td>0.910</td><td>0.825</td><td>0.303</td></tr><tr><td><strong>title_body</strong></td><td>292</td><td>224.8</td><td>0.890</td><td>0.800</td><td>0.297</td></tr></tbody></table></div>
+    <div class="section-head rank-heading">
+      <h2>정답 슬라이드 검색 순위 분포</h2>
+      <p>각 평가 질문의 정답 슬라이드가 Top-1, Top-2, Top-3에 검색된 횟수와 미검색 횟수입니다.</p>
+    </div>
+    <div class="rank-grid">
+            <article class="rank-card">
+              <h3>recursive</h3>
+              <div class="rank-track"><div class="rank-segment" title="Top-1: 77개" style="width:77.00%;background:#3157d5"></div><div class="rank-segment" title="Top-2: 12개" style="width:12.00%;background:#8b5cf6"></div><div class="rank-segment" title="Top-3: 3개" style="width:3.00%;background:#08a88a"></div><div class="rank-segment" title="미검색: 8개" style="width:8.00%;background:#d6dce6"></div></div>
+              <div class="rank-legend"><span><i style="background:#3157d5"></i>Top-1 <b>77</b></span><span><i style="background:#8b5cf6"></i>Top-2 <b>12</b></span><span><i style="background:#08a88a"></i>Top-3 <b>3</b></span><span><i style="background:#d6dce6"></i>미검색 <b>8</b></span></div>
+            </article>
+            
+            <article class="rank-card">
+              <h3>sentence_pack</h3>
+              <div class="rank-track"><div class="rank-segment" title="Top-1: 71개" style="width:71.00%;background:#3157d5"></div><div class="rank-segment" title="Top-2: 16개" style="width:16.00%;background:#8b5cf6"></div><div class="rank-segment" title="Top-3: 3개" style="width:3.00%;background:#08a88a"></div><div class="rank-segment" title="미검색: 10개" style="width:10.00%;background:#d6dce6"></div></div>
+              <div class="rank-legend"><span><i style="background:#3157d5"></i>Top-1 <b>71</b></span><span><i style="background:#8b5cf6"></i>Top-2 <b>16</b></span><span><i style="background:#08a88a"></i>Top-3 <b>3</b></span><span><i style="background:#d6dce6"></i>미검색 <b>10</b></span></div>
+            </article>
+            
+            <article class="rank-card">
+              <h3>slide_aware</h3>
+              <div class="rank-track"><div class="rank-segment" title="Top-1: 75개" style="width:75.00%;background:#3157d5"></div><div class="rank-segment" title="Top-2: 13개" style="width:13.00%;background:#8b5cf6"></div><div class="rank-segment" title="Top-3: 3개" style="width:3.00%;background:#08a88a"></div><div class="rank-segment" title="미검색: 9개" style="width:9.00%;background:#d6dce6"></div></div>
+              <div class="rank-legend"><span><i style="background:#3157d5"></i>Top-1 <b>75</b></span><span><i style="background:#8b5cf6"></i>Top-2 <b>13</b></span><span><i style="background:#08a88a"></i>Top-3 <b>3</b></span><span><i style="background:#d6dce6"></i>미검색 <b>9</b></span></div>
+            </article>
+            
+            <article class="rank-card">
+              <h3>title_body</h3>
+              <div class="rank-track"><div class="rank-segment" title="Top-1: 72개" style="width:72.00%;background:#3157d5"></div><div class="rank-segment" title="Top-2: 14개" style="width:14.00%;background:#8b5cf6"></div><div class="rank-segment" title="Top-3: 3개" style="width:3.00%;background:#08a88a"></div><div class="rank-segment" title="미검색: 11개" style="width:11.00%;background:#d6dce6"></div></div>
+              <div class="rank-legend"><span><i style="background:#3157d5"></i>Top-1 <b>72</b></span><span><i style="background:#8b5cf6"></i>Top-2 <b>14</b></span><span><i style="background:#08a88a"></i>Top-3 <b>3</b></span><span><i style="background:#d6dce6"></i>미검색 <b>11</b></span></div>
+            </article>
+            </div>
+    
+    <details class="detail-panel">
+      <summary>평가 질문 100개 상세 검색 결과 보기</summary>
+      <div class="table-wrap detail-table">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>분류</th><th>평가 질문</th><th>정답 슬라이드</th><th>recursive</th><th>sentence_pack</th><th>slide_aware</th><th>title_body</th>
+          </tr></thead>
+          <tbody><tr><td>eval-001</td><td>차체이론</td><td class="query-cell">자동차 차체란 무엇이며 어떤 역할을 하나요?</td><td>9</td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[133, 4, 43]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[133, 9, 4]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[133, 9, 129]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[133, 9, 133]</small></td></tr><tr><td>eval-002</td><td>차체이론</td><td class="query-cell">자동차 차체의 주요 부분 명칭에는 무엇이 있나요?</td><td>10</td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[43, 103, 4]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[4, 48, 103]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[4, 103, 119]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[119, 5, 137]</small></td></tr><tr><td>eval-003</td><td>차체이론</td><td class="query-cell">자동차 설계에서 T, L, H 좌표축은 각각 어떤 방향을 의미하나요?</td><td>11</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[11, 87, 87]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[11, 87, 86]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[11, 87, 86]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[11, 87, 86]</small></td></tr><tr><td>eval-004</td><td>차체제조</td><td class="query-cell">차체 제조공정은 원자재 입고 이후 어떤 순서로 진행되나요?</td><td>12</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[12, 13, 13]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[12, 13, 95]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[12, 13, 95]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[13, 12, 95]</small></td></tr><tr><td>eval-005</td><td>차체제조</td><td class="query-cell">TWB란 무엇이며 차체 제작에 어떤 장점이 있나요?</td><td>13</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[43, 13, 70]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[13, 131, 70]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[13, 13, 131]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[13, 131, 70]</small></td></tr><tr><td>eval-006</td><td>차체제조</td><td class="query-cell">알루미늄을 차체에 적용하면 경량화 측면에서 어떤 효과가 있나요?</td><td>14</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[14, 5, 14]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[14, 5, 13]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[14, 14, 14]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[14, 14, 13]</small></td></tr><tr><td>eval-007</td><td>프레스</td><td class="query-cell">프레스 가공이란 무엇이며 어떤 방식으로 금속을 가공하나요?</td><td>15</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[15, 18, 19]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[15, 19, 18]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[15, 19, 18]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[15, 18, 16]</small></td></tr><tr><td>eval-008</td><td>프레스</td><td class="query-cell">프레스는 어떤 기준과 종류로 분류할 수 있나요?</td><td>16</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[15, 16, 19]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[16, 15, 19]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[15, 16, 15]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[16, 15, 15]</small></td></tr><tr><td>eval-009</td><td>프레스</td><td class="query-cell">기계식 프레스에서 전동기의 회전운동은 어떻게 상하운동으로 변환되나요?</td><td>17</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[17, 15, 15]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[17, 15, 15]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[17, 15, 15]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[17, 16, 15]</small></td></tr><tr><td>eval-010</td><td>금형</td><td class="query-cell">금형이란 무엇이며 차체 제조공정에서 어떻게 활용되나요?</td><td>18</td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[16, 19, 23]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[16, 19, 14]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[16, 19, 29]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[14, 23, 13]</small></td></tr><tr><td>eval-011</td><td>프레스</td><td class="query-cell">프레스 가공에는 어떤 종류가 있나요?</td><td>19</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[19, 15, 15]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[19, 15, 15]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[19, 15, 15]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 16, 15]</small></td></tr><tr><td>eval-012</td><td>프레스</td><td class="query-cell">샤링, 컷팅, 블랭킹은 각각 어떤 프레스 가공인가요?</td><td>20</td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 19, 15]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 19, 96]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 19, 15]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 16, 18]</small></td></tr><tr><td>eval-013</td><td>프레스</td><td class="query-cell">여러 공정으로 이루어진 프레스 가공은 어떤 순서로 진행되나요?</td><td>21</td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 19, 15]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 19, 15]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 19, 15]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 16, 18]</small></td></tr><tr><td>eval-014</td><td>품질관리</td><td class="query-cell">프레스 가공에서 찍힘 등의 불량은 어떤 현상인가요?</td><td>22</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[22, 15, 19]</small></td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[15, 19, 22]</small></td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[15, 19, 22]</small></td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[15, 16, 22]</small></td></tr><tr><td>eval-015</td><td>조립</td><td class="query-cell">차체 제조에서 조립용 지그와 검사구는 각각 어떤 용도로 사용되나요?</td><td>23</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[23, 23, 24]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[23, 92, 13]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[23, 23, 13]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[23, 13, 24]</small></td></tr><tr><td>eval-016</td><td>용접</td><td class="query-cell">CO2 용접 로봇과 STUD 용접 로봇은 어떤 원리로 용접하나요?</td><td>24</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[24, 28, 101]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[24, 28, 102]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[24, 28, 101]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[24, 28, 101]</small></td></tr><tr><td>eval-017</td><td>용접</td><td class="query-cell">점용접에서 전류와 가압력의 과대 또는 과소가 품질에 어떤 영향을 주나요?</td><td>25</td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[100, 33, 100]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[100, 100, 33]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[100, 100, 33]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[100, 100, 33]</small></td></tr><tr><td>eval-018</td><td>용접</td><td class="query-cell">프로젝션 용접에는 어떤 너트와 볼트가 사용되나요?</td><td>26</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[26, 99, 99]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[26, 99, 122]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[26, 99, 122]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[26, 99, 122]</small></td></tr><tr><td>eval-019</td><td>용접</td><td class="query-cell">아크용접에서 토치 각도는 비드 폭과 용입에 어떤 영향을 주나요?</td><td>27</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[27, 28, 24]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[27, 28, 68]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[27, 28, 102]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[27, 28, 68]</small></td></tr><tr><td>eval-020</td><td>용접</td><td class="query-cell">STUD 용접의 원리와 주요 장점은 무엇인가요?</td><td>28</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[28, 102, 28]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[28, 99, 24]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[28, 102, 99]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[28, 102, 24]</small></td></tr><tr><td>eval-021</td><td>품질관리</td><td class="query-cell">양산제품의 초중종품 자주검사는 어떻게 수행하나요?</td><td>29</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[29, 31, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[29, 31, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[29, 31, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[29, 31, 66]</small></td></tr><tr><td>eval-022</td><td>품질관리</td><td class="query-cell">양산제품 품질관리에서 외관검사의 기준과 확인 주기는 무엇인가요?</td><td>30</td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[31, 29, 30]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[29, 31, 95]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[29, 31, 95]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[29, 30, 31]</small></td></tr><tr><td>eval-023</td><td>품질관리</td><td class="query-cell">용접 품질을 확인하는 파괴검사는 어떤 방법으로 실시하나요?</td><td>31</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[31, 31, 113]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[31, 24, 102]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[31, 99, 24]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[31, 24, 99]</small></td></tr><tr><td>eval-024</td><td>품질관리</td><td class="query-cell">프레스 공정에서 소재와 블랭킹 단계의 품질은 어떻게 관리하나요?</td><td>32</td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[96, 15, 32]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[96, 15, 15]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 15, 19]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[15, 16, 96]</small></td></tr><tr><td>eval-025</td><td>품질관리</td><td class="query-cell">차체 조립공정에서 발생하는 대표적인 용접 불량과 원인은 무엇인가요?</td><td>33</td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[24, 23, 24]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[24, 23, 29]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[24, 29, 23]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[24, 23, 29]</small></td></tr><tr><td>eval-026</td><td>안전관리</td><td class="query-cell">생산관리 실무의 안전관리 교육에서는 어떤 내용을 다루나요?</td><td>34</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[34, 40, 62]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[40, 34, 55]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[34, 65, 71]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[34, 150, 39]</small></td></tr><tr><td>eval-027</td><td>안전관리</td><td class="query-cell">사고연쇄 도미노 이론은 사고 발생을 어떻게 설명하나요?</td><td>35</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[35, 36, 35]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[35, 36, 39]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[35, 36, 36]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[35, 36, 35]</small></td></tr><tr><td>eval-028</td><td>안전관리</td><td class="query-cell">하인리히 법칙에서 중대재해와 경미한 사고의 발생 비율은 어떻게 설명되나요?</td><td>36</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[36, 36, 35]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[36, 35, 42]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[36, 35, 42]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[36, 36, 35]</small></td></tr><tr><td>eval-029</td><td>안전관리</td><td class="query-cell">지게차 작업의 주요 위험요인과 사고 예방대책은 무엇인가요?</td><td>37</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[37, 37, 35]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[37, 39, 35]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[37, 37, 39]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[37, 37, 39]</small></td></tr><tr><td>eval-030</td><td>안전관리</td><td class="query-cell">크레인 작업에서 발생할 수 있는 사고 유형과 예방대책은 무엇인가요?</td><td>38</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[38, 35, 38]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[38, 36, 35]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[38, 36, 35]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[38, 36, 35]</small></td></tr><tr><td>eval-031</td><td>안전관리</td><td class="query-cell">프레스 작업의 위험 발생요인과 안전장치는 무엇인가요?</td><td>39</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[39, 38, 15]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[39, 15, 15]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[15, 39, 15]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[16, 39, 15]</small></td></tr><tr><td>eval-032</td><td>안전관리</td><td class="query-cell">산업현장의 유해화학물질은 어떤 경로로 인체에 노출되며 어떻게 관리해야 하나요?</td><td>40</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[163, 40, 66]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[163, 40, 70]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[40, 163, 70]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[163, 40, 70]</small></td></tr><tr><td>eval-033</td><td>관리자마인드</td><td class="query-cell">관리자의 업무 기본인 PDCA 사이클은 어떤 단계로 구성되나요?</td><td>41</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[41, 142, 70]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[41, 142, 108]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[41, 142, 108]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[41, 142, 70]</small></td></tr><tr><td>eval-034</td><td>관리자마인드</td><td class="query-cell">생산현장의 7대 낭비에는 무엇이 있으며 과잉생산은 어떻게 개선하나요?</td><td>42</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[42, 43, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[42, 42, 43]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[42, 42, 43]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[42, 42, 44]</small></td></tr><tr><td>eval-035</td><td>관리자마인드</td><td class="query-cell">생산관리에서 정량, 정품, 정위치는 각각 무엇을 의미하나요?</td><td>43</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[43, 42, 37]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[43, 42, 55]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[43, 42, 65]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[43, 37, 42]</small></td></tr><tr><td>eval-036</td><td>관리자마인드</td><td class="query-cell">5S 활동의 정리, 정돈, 청소, 청결, 습관화는 각각 무엇을 의미하나요?</td><td>44</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[44, 42, 44]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[44, 42, 43]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[44, 42, 43]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[44, 44, 42]</small></td></tr><tr><td>eval-037</td><td>신차개발</td><td class="query-cell">신차개발 프로세스는 왜 필요하며 Q, C, D는 무엇을 의미하나요?</td><td>45</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[45, 46, 113]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[45, 110, 113]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[45, 110, 48]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[45, 110, 34]</small></td></tr><tr><td>eval-038</td><td>신차개발</td><td class="query-cell">신차개발에서 T-CAR는 어떤 목적의 차량인가요?</td><td>46</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[46, 46, 45]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[46, 45, 46]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[46, 46, 45]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[46, 45, 46]</small></td></tr><tr><td>eval-039</td><td>신차개발</td><td class="query-cell">신차개발 용어 MIP는 무엇을 의미하나요?</td><td>47</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[46, 47, 45]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[45, 47, 46]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[47, 48, 45]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[130, 47, 45]</small></td></tr><tr><td>eval-040</td><td>신차개발</td><td class="query-cell">ECS 전자제어 서스펜션은 주행 조건에 따라 무엇을 제어하나요?</td><td>48</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[48, 148, 116]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[48, 116, 142]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[48, 116, 142]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[48, 116, 142]</small></td></tr><tr><td>eval-041</td><td>신차개발</td><td class="query-cell">Balance Out Model은 자동차 개발에서 어떤 모델을 뜻하나요?</td><td>49</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[49, 49, 46]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[49, 46, 62]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[49, 123, 46]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[49, 127, 115]</small></td></tr><tr><td>eval-042</td><td>신차개발</td><td class="query-cell">신차업무는 입찰부터 SOP 전후까지 어떤 흐름으로 진행되나요?</td><td>50</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[50, 109, 50]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[50, 109, 53]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[50, 109, 53]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[50, 109, 53]</small></td></tr><tr><td>eval-043</td><td>신차개발</td><td class="query-cell">제품 설계와 모델 고정 단계에서는 협력사가 어떤 업무를 수행하나요?</td><td>51</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[51, 46, 109]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[51, 109, 46]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[51, 109, 23]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[51, 109, 46]</small></td></tr><tr><td>eval-044</td><td>신차개발</td><td class="query-cell">P1 PILOT-1 차량은 어떤 목적으로 제작되나요?</td><td>52</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[52, 46, 46]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[52, 46, 46]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[52, 46, 46]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[52, 46, 46]</small></td></tr><tr><td>eval-045</td><td>생산관리</td><td class="query-cell">SPC 통계적 공정관리란 무엇이며 어떤 목적으로 사용하나요?</td><td>53</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[53, 53, 151]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[53, 69, 151]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[53, 151, 46]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[53, 53, 46]</small></td></tr><tr><td>eval-046</td><td>생산관리</td><td class="query-cell">생산관리란 무엇이며 생산시스템의 어떤 요소를 관리하나요?</td><td>54</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[54, 69, 34]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[69, 54, 55]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[69, 54, 65]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[54, 69, 148]</small></td></tr><tr><td>eval-047</td><td>생산관리</td><td class="query-cell">생산성과 UPH는 무엇을 의미하며 생산성은 어떻게 향상할 수 있나요?</td><td>55</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[55, 55, 55]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[55, 66, 47]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[55, 56, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[55, 66, 47]</small></td></tr><tr><td>eval-048</td><td>생산관리</td><td class="query-cell">M/H 분석에서 생산성을 저해하는 Loss는 어떤 구조로 구분되나요?</td><td>56</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[56, 56, 56]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[56, 60, 59]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[56, 56, 60]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[56, 59, 56]</small></td></tr><tr><td>eval-049</td><td>생산관리</td><td class="query-cell">설비 종합효율은 시간, 성능, 품질 측면에서 무엇을 평가하나요?</td><td>57</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[57, 58, 59]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[58, 57, 159]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[57, 58, 57]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[58, 57, 159]</small></td></tr><tr><td>eval-050</td><td>생산관리</td><td class="query-cell">설비 종합효율은 어떤 항목을 이용해 계산하나요?</td><td>58</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[58, 57, 59]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[58, 57, 59]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[58, 57, 57]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[58, 57, 59]</small></td></tr><tr><td>eval-051</td><td>생산관리</td><td class="query-cell">종합효율 관리가 필요한 Bottle Neck 공정의 특징은 무엇인가요?</td><td>59</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[59, 58, 61]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[56, 58, 61]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[58, 56, 61]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[61, 58, 56]</small></td></tr><tr><td>eval-052</td><td>생산관리</td><td class="query-cell">부하분석에서 CAPA란 무엇이며 생산계획 수립에 어떻게 활용하나요?</td><td>60</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[60, 66, 65]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[66, 60, 67]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[66, 60, 65]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[66, 67, 65]</small></td></tr><tr><td>eval-053</td><td>공정개선</td><td class="query-cell">공정개선에서 Tact Time을 줄이기 위한 방법은 무엇인가요?</td><td>61</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[61, 61, 55]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[61, 54, 55]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[61, 54, 55]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[61, 55, 123]</small></td></tr><tr><td>eval-054</td><td>공정개선</td><td class="query-cell">생산라인의 Lay Out 개선은 공간 활용과 작업 흐름에 어떤 효과가 있나요?</td><td>62</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[62, 51, 111]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[62, 111, 63]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[62, 111, 123]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[62, 111, 63]</small></td></tr><tr><td>eval-055</td><td>공정개선</td><td class="query-cell">다중활동분석은 작업자와 로봇의 작업을 어떻게 분석하나요?</td><td>63</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[63, 63, 71]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[63, 64, 71]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[63, 64, 71]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[63, 64, 71]</small></td></tr><tr><td>eval-056</td><td>공정개선</td><td class="query-cell">M-M Man-Machine 차트는 공정개선에 어떻게 활용되나요?</td><td>64</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[63, 64, 68]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[63, 64, 68]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[63, 64, 68]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[63, 64, 68]</small></td></tr><tr><td>eval-057</td><td>생산계획</td><td class="query-cell">생산계획 업무는 수주통보 이후 어떤 절차로 진행되나요?</td><td>65</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[65, 109, 67]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[65, 67, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[65, 65, 67]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[65, 67, 66]</small></td></tr><tr><td>eval-058</td><td>생산계획</td><td class="query-cell">단기, 중기, 장기 수요예측은 생산계획에 어떻게 활용되나요?</td><td>66</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[66, 66, 67]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[66, 67, 65]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[66, 67, 65]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[66, 66, 67]</small></td></tr><tr><td>eval-059</td><td>생산계획</td><td class="query-cell">장기와 중기 생산계획 업무 프로세스는 어떻게 구분되나요?</td><td>67</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[67, 66, 65]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[67, 66, 65]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[67, 65, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[67, 66, 65]</small></td></tr><tr><td>eval-060</td><td>생산관리</td><td class="query-cell">공정의 4M 관리에서 Man, Machine, Material, Method는 무엇을 뜻하나요?</td><td>68</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[68, 68, 70]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[68, 68, 70]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[68, 68, 70]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[68, 68, 70]</small></td></tr><tr><td>eval-061</td><td>생산시스템</td><td class="query-cell">POP 시스템은 현장의 생산정보를 어떻게 수집하고 ERP와 연동하나요?</td><td>69</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[69, 69, 148]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[69, 148, 72]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[69, 69, 148]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[69, 69, 148]</small></td></tr><tr><td>eval-062</td><td>생산시스템</td><td class="query-cell">BOM은 무엇이며 제품의 부품 구성을 어떻게 표현하나요?</td><td>70</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[70, 47, 47]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[70, 47, 47]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[70, 47, 47]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[70, 56, 47]</small></td></tr><tr><td>eval-063</td><td>생산시스템</td><td class="query-cell">작업순서도에는 부품 목록과 작업 순서를 어떻게 표시하나요?</td><td>71</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[71, 43, 116]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[71, 43, 116]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[71, 71, 43]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[71, 43, 116]</small></td></tr><tr><td>eval-064</td><td>생산시스템</td><td class="query-cell">ERP 전사적 자원관리 시스템의 목적과 주요 기능은 무엇인가요?</td><td>72</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[72, 69, 148]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[72, 69, 148]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[69, 72, 69]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[72, 69, 148]</small></td></tr><tr><td>eval-065</td><td>생산시스템</td><td class="query-cell">EKP 기업지식포털은 기업 내외부 정보를 어떻게 통합하나요?</td><td>73</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[73, 66, 73]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[73, 156, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[73, 156, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[73, 66, 156]</small></td></tr><tr><td>eval-066</td><td>차체부품</td><td class="query-cell">PNL ASSY-F/APRON 부품은 엔진과 서스펜션을 어떻게 지지하나요?</td><td>85</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[135, 85, 139]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[135, 85, 2]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[135, 85, 85]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[135, 85, 2]</small></td></tr><tr><td>eval-067</td><td>차체설계</td><td class="query-cell">자동차 설계의 기준이 되는 카라인은 무엇을 기준으로 생성하나요?</td><td>86</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[86, 86, 87]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[86, 87, 11]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[86, 87, 11]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[86, 87, 92]</small></td></tr><tr><td>eval-068</td><td>차체설계</td><td class="query-cell">차량 좌표에서 T 플러스와 T 마이너스 방향은 어떻게 구분하나요?</td><td>87</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[87, 11, 86]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[87, 114, 11]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[87, 114, 11]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[87, 114, 11]</small></td></tr><tr><td>eval-069</td><td>계측기</td><td class="query-cell">버니어 캘리퍼스는 어떤 치수를 어느 정도 정확도로 측정하나요?</td><td>88</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[90, 88, 89]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[90, 88, 89]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[90, 88, 89]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[90, 88, 89]</small></td></tr><tr><td>eval-070</td><td>계측기</td><td class="query-cell">디지털 버니어 캘리퍼스의 측정 순서와 원점 설정 방법은 무엇인가요?</td><td>89</td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[88, 90, 89]</small></td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[88, 90, 89]</small></td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[88, 90, 89]</small></td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[88, 90, 89]</small></td></tr><tr><td>eval-071</td><td>계측기</td><td class="query-cell">일반 버니어 캘리퍼스의 눈금은 어떻게 읽나요?</td><td>90</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[90, 88, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[90, 88, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[90, 88, 66]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[90, 88, 66]</small></td></tr><tr><td>eval-072</td><td>계측기</td><td class="query-cell">다이얼 게이지는 무엇을 측정하며 어떻게 사용하나요?</td><td>91</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[91, 91, 93]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[91, 93, 93]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[91, 93, 91]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[91, 93, 91]</small></td></tr><tr><td>eval-073</td><td>계측기</td><td class="query-cell">갭자와 스틸자는 각각 어떤 치수를 측정하나요?</td><td>92</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[92, 92, 89]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[89, 92, 91]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[92, 89, 92]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[89, 92, 91]</small></td></tr><tr><td>eval-074</td><td>계측기</td><td class="query-cell">토크 렌치는 어떤 용접 강도를 측정하며 사용 시 무엇을 확인해야 하나요?</td><td>93</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[102, 93, 102]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[102, 102, 89]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[93, 102, 102]</small></td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[102, 33, 102]</small></td></tr><tr><td>eval-075</td><td>계측기</td><td class="query-cell">압축강도 시험기는 너트와 볼트의 무엇을 측정하나요?</td><td>94</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[94, 93, 89]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[94, 89, 93]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[94, 93, 93]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[94, 89, 93]</small></td></tr><tr><td>eval-076</td><td>품질관리</td><td class="query-cell">원자재 코일의 표면 긁힘과 선 자국은 품질에 어떤 영향을 주며 어떻게 관리하나요?</td><td>95</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[95, 13, 13]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[95, 68, 13]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[95, 68, 13]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[95, 68, 13]</small></td></tr><tr><td>eval-077</td><td>품질관리</td><td class="query-cell">피딩공정의 롤 마크와 스크래치는 왜 발생하며 어떻게 예방하나요?</td><td>96</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[96, 32, 96]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[96, 32, 98]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[96, 32, 98]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[96, 96, 32]</small></td></tr><tr><td>eval-078</td><td>품질관리</td><td class="query-cell">금형 세척주기는 어떻게 관리하며 RFID는 어떤 역할을 하나요?</td><td>97</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[97, 32, 97]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[32, 97, 32]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[97, 97, 32]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[97, 97, 32]</small></td></tr><tr><td>eval-079</td><td>품질관리</td><td class="query-cell">프레스 제품의 외관검사에서는 굴곡, 크랙, 스크래치 등을 어떤 기준으로 확인하나요?</td><td>98</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[98, 86, 23]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[98, 86, 15]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[98, 98, 15]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[98, 16, 15]</small></td></tr><tr><td>eval-080</td><td>용접</td><td class="query-cell">저항 용접의 원리와 대량생산에 적합한 이유는 무엇인가요?</td><td>99</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[99, 126, 99]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[99, 99, 126]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[99, 99, 126]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[99, 99, 126]</small></td></tr><tr><td>eval-081</td><td>용접</td><td class="query-cell">점용접에서 중간날림이 발생하는 원인은 무엇인가요?</td><td>100</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[100, 36, 24]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[100, 29, 42]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[100, 100, 42]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[100, 36, 24]</small></td></tr><tr><td>eval-082</td><td>용접</td><td class="query-cell">CO2 용접점의 외관과 용입량은 어떤 기준으로 검사하나요?</td><td>101</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[101, 101, 86]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[101, 86, 155]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[101, 86, 101]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[101, 86, 155]</small></td></tr><tr><td>eval-083</td><td>용접</td><td class="query-cell">STUD 용접의 최소, 최적, 최대 조건은 어떻게 관리하나요?</td><td>102</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[28, 102, 102]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[28, 102, 102]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[28, 102, 102]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[28, 102, 33]</small></td></tr><tr><td>eval-084</td><td>품질관리</td><td class="query-cell">차체 품목에서 프레스와 용접 공정의 중점관리 항목은 무엇인가요?</td><td>103</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[103, 16, 103]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[103, 15, 16]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[103, 15, 16]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[103, 15, 16]</small></td></tr><tr><td>eval-085</td><td>신차개발</td><td class="query-cell">신차 개발 업무는 수주 이후 양산 이관까지 어떤 활동을 포함하나요?</td><td>109</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[109, 45, 50]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[109, 45, 110]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[109, 45, 110]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[109, 45, 110]</small></td></tr><tr><td>eval-086</td><td>생산기술</td><td class="query-cell">생기 개발 업무의 목적과 양산 준비 활동은 무엇인가요?</td><td>110</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[110, 76, 109]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[110, 115, 45]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[110, 115, 45]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[110, 45, 115]</small></td></tr><tr><td>eval-087</td><td>생산기술</td><td class="query-cell">조립공법서란 무엇이며 설비 설계와 준비에 어떻게 사용되나요?</td><td>111</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[112, 111, 111]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[112, 111, 111]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[112, 111, 111]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[112, 111, 111]</small></td></tr><tr><td>eval-088</td><td>생산기술</td><td class="query-cell">조립공법서는 어떤 절차와 기준에 따라 작성하나요?</td><td>112</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[112, 111, 47]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[112, 111, 47]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[112, 111, 111]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[112, 111, 47]</small></td></tr><tr><td>eval-089</td><td>생산기술</td><td class="query-cell">조립 치구는 가공물이나 조립물을 어떻게 위치 결정하고 고정하나요?</td><td>113</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[113, 43, 23]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[113, 23, 43]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[113, 23, 43]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[113, 23, 43]</small></td></tr><tr><td>eval-090</td><td>생산기술</td><td class="query-cell">조립 지그에서 T, L, H 좌표의 기준점과 방향은 어떻게 정의하나요?</td><td>114</td><td><span class="rank-pill rank-miss">미검색</span><small class="slides">[87, 86, 87]</small></td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[87, 86, 114]</small></td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[87, 86, 114]</small></td><td><span class="rank-pill rank-3">Top-3</span><small class="slides">[87, 86, 114]</small></td></tr><tr><td>eval-091</td><td>생산기술</td><td class="query-cell">품질확보를 위한 현장 T/O는 무엇이며 어떤 항목을 시험하나요?</td><td>115</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[115, 115, 115]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[115, 115, 110]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[115, 115, 115]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[115, 115, 115]</small></td></tr><tr><td>eval-092</td><td>생산기술</td><td class="query-cell">용접 로봇의 제어반과 기구부는 각각 어떤 역할을 하나요?</td><td>116</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[116, 24, 133]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[116, 24, 133]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[116, 24, 133]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[116, 24, 133]</small></td></tr><tr><td>eval-093</td><td>지그</td><td class="query-cell">자동차 차체 조립 JIG의 유닛, 베이스, 유틸리티는 각각 어떤 역할을 하나요?</td><td>124</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[124, 126, 124]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[124, 126, 125]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[124, 126, 125]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[124, 126, 125]</small></td></tr><tr><td>eval-094</td><td>지그</td><td class="query-cell">JIG의 유틸리티란 무엇이며 JIG 조립과 정도 검사는 어떻게 수행하나요?</td><td>125</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[126, 125, 124]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[126, 125, 124]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[126, 125, 126]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[126, 125, 124]</small></td></tr><tr><td>eval-095</td><td>지그</td><td class="query-cell">좋은 품질의 JIG가 갖추어야 할 조건과 일상관리 항목은 무엇인가요?</td><td>126</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[126, 115, 126]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[126, 115, 126]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[126, 126, 115]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[126, 115, 126]</small></td></tr><tr><td>eval-096</td><td>수소연료전지</td><td class="query-cell">수소연료전지는 어떤 원리로 전기에너지를 생산하나요?</td><td>127</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[127, 128, 129]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[127, 128, 129]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[127, 128, 129]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[127, 129, 128]</small></td></tr><tr><td>eval-097</td><td>수소연료전지</td><td class="query-cell">연료전지의 FPS와 APS는 각각 무엇을 공급하는 시스템인가요?</td><td>128</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[128, 128, 129]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[128, 129, 148]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[128, 129, 148]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[128, 129, 127]</small></td></tr><tr><td>eval-098</td><td>수소연료전지</td><td class="query-cell">ENCLOSURE UPR은 연료전지 스택과 관련 부품을 어떻게 보호하고 지지하나요?</td><td>129</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[129, 127, 128]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[129, 127, 56]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[129, 127, 56]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[129, 127, 56]</small></td></tr><tr><td>eval-099</td><td>차체이론</td><td class="query-cell">BIW와 MIP는 자동차 개발에서 각각 무엇을 의미하나요?</td><td>130</td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[47, 130, 11]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[47, 130, 4]</small></td><td><span class="rank-pill rank-2">Top-2</span><small class="slides">[47, 130, 4]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[130, 47, 11]</small></td></tr><tr><td>eval-100</td><td>차체이론</td><td class="query-cell">프레임 바디와 일체형 차체는 구조적으로 어떻게 다른가요?</td><td>131</td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[131, 131, 131]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[131, 131, 131]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[131, 131, 131]</small></td><td><span class="rank-pill rank-1">Top-1</span><small class="slides">[131, 16, 131]</small></td></tr></tbody>
+        </table>
+      </div>
+    </details>
+    
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>2. 청크 구성 비교</h2>
+      <p>전략별 청크 수와 평균 길이를 각 지표의 최댓값 기준으로 표시합니다.</p>
+    </div>
+    <div class="stats-chart">
+            <div class="stat-row">
+              <strong>recursive</strong>
+              <div>
+                <div class="mini-label"><span>청크 수</span><b>461</b></div>
+                <div class="track"><div class="fill" style="width:100.00%;background:#f59e0b"></div></div>
+              </div>
+              <div>
+                <div class="mini-label"><span>평균 글자 수</span><b>131.3</b></div>
+                <div class="track"><div class="fill" style="width:58.41%;background:#ef6c57"></div></div>
+              </div>
+            </div>
+            
+            <div class="stat-row">
+              <strong>sentence_pack</strong>
+              <div>
+                <div class="mini-label"><span>청크 수</span><b>275</b></div>
+                <div class="track"><div class="fill" style="width:59.65%;background:#f59e0b"></div></div>
+              </div>
+              <div>
+                <div class="mini-label"><span>평균 글자 수</span><b>199.1</b></div>
+                <div class="track"><div class="fill" style="width:88.58%;background:#ef6c57"></div></div>
+              </div>
+            </div>
+            
+            <div class="stat-row">
+              <strong>slide_aware</strong>
+              <div>
+                <div class="mini-label"><span>청크 수</span><b>266</b></div>
+                <div class="track"><div class="fill" style="width:57.70%;background:#f59e0b"></div></div>
+              </div>
+              <div>
+                <div class="mini-label"><span>평균 글자 수</span><b>218.3</b></div>
+                <div class="track"><div class="fill" style="width:97.08%;background:#ef6c57"></div></div>
+              </div>
+            </div>
+            
+            <div class="stat-row">
+              <strong>title_body</strong>
+              <div>
+                <div class="mini-label"><span>청크 수</span><b>292</b></div>
+                <div class="track"><div class="fill" style="width:63.34%;background:#f59e0b"></div></div>
+              </div>
+              <div>
+                <div class="mini-label"><span>평균 글자 수</span><b>224.8</b></div>
+                <div class="track"><div class="fill" style="width:100.00%;background:#ef6c57"></div></div>
+              </div>
+            </div>
+            </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>3. 생성 퀴즈</h2>
+      <p>문제, 선택지, 정답, 해설, 근거와 원문 출처를 확인합니다.</p>
+    </div>
+    <div class="quiz-grid">
+    <article class="quiz-card">
+      <div class="quiz-head">
+        <div><small>quiz-002.json</small><h3>quiz-002</h3></div>
+        <span class="type">multiple_choice</span>
+      </div>
+      <p class="question">중간날림의 원인이 무엇인가요?</p>
+      <ol class="choices"><li class="choice correct"><span class="number">1</span><span>가압력 부족</span><span class="badge">정답</span></li><li class="choice"><span class="number">2</span><span>팁선단 과소</span></li><li class="choice"><span class="number">3</span><span>전류 과대</span></li><li class="choice"><span class="number">4</span><span>판넬 매칭불량</span></li></ol>
+      <dl>
+        <dt>정답</dt><dd class="answer">1번 · 가압력 부족</dd>
+        <dt>해설</dt><dd>중간날림의 원인에는 가압력 부족이 포함됩니다.</dd>
+        <dt>근거</dt><dd>자료 1: &#x27;점용접의 결함과 원인&#x27;에서 &#x27;중간날림 | - 가압력 부족&#x27;이라는 정보가 있습니다.</dd>
+      </dl>
+      <div class="source">
+        <span>자료 1</span>
+        <span>슬라이드 100</span>
+        <code>ajin_training_250416-p100-c01</code>
+      </div>
+    </article>
+    </div>
+  </section>
+</main>
+</body>
+</html>

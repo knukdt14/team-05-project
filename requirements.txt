@@ -7,3 +7,48 @@ sentence-transformers>=3.0.0   # ProductionEmbedder (intfloat/multilingual-e5-sm
 transformers>=4.44.0            # generator.py (Qwen2.5-1.5B-Instruct)
 torch>=2.3.0
 bert-score>=0.3.13               # evaluator.bert_score_eval
+
+
+# common
+python-dotenv
+jupyter
+notebook
+ipykernel
+ipywidgets
+matplotlib
+seaborn
+numpy
+scipy
+pandas
+
+# machinelearning
+torchvision
+torchaudio
+
+# model
+huggingface_hub
+datasets
+accelerate
+evaluate
+llama-index
+faiss-cpu
+pinecone
+gensim
+rank-bm25
+langchain
+langchain-core
+langchain-community
+langchain-classic
+langchain-openai
+langchain-huggingface
+langchain-chroma
+langchain-pinecone
+pymupdf
+ragas
+
+# web
+flask
+fastapi
+uvicorn
+streamlit
+httpie
