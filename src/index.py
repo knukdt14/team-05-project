@@ -8,14 +8,22 @@ import chromadb
 
 
 def build_index(chunks: list[dict], embedder, persist_dir: str = "./chroma_store",
-                 collection_name: str = "ajin_safety_quiz"):
+                 collection_name: str = "ajin_safety_quiz", space: str = "l2"):
+    """
+    space: Chroma가 유사도를 계산하는 거리방식.
+        - "l2"(기본값): 유클리드 거리
+        - "cosine": 코사인 유사도 기반 거리
+        - "ip": 내적(inner product) 기반
+    우리는 embed_documents/embed_query에서 이미 normalize_embeddings=True로
+    벡터를 정규화해뒀기 때문에, 이론적으로는 l2와 cosine의 "순위"가 동일해야 함
+    -> 실제로 동일한지 실험으로 검증하는 용도로 이 파라미터를 노출함.
+    """
     client = chromadb.PersistentClient(path=persist_dir)
-    # 재실행 시 중복 방지
     try:
         client.delete_collection(collection_name)
     except Exception:
         pass
-    collection = client.create_collection(collection_name)
+    collection = client.create_collection(collection_name, metadata={"hnsw:space": space})
 
     texts = [c["text"] for c in chunks]
     embeddings = embedder.embed_documents(texts)

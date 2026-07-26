@@ -15,6 +15,31 @@ def retrieve(collection, embedder, query: str, k: int = 3):
     ]
 
 
+def retrieve_diverse(collection, embedder, query: str, k: int = 3, fetch_k: int = 15):
+    """
+    이슈 수정판: 같은 슬라이드의 청크가 top-k 안에 중복으로 들어가는 문제를 해결.
+    - 일단 넉넉하게 fetch_k개(기본 15개)를 가져온 다음
+    - 슬라이드 번호가 같으면 그중 가장 점수 높은(=순서상 먼저 나온) 청크만 남기고
+    - 서로 다른 슬라이드 k개가 채워질 때까지만 채택
+    이러면 top-k 안의 "실질적으로 서로 다른 정보"의 개수가 늘어나서
+    precision@k가 개선됨 (recall@k는 유지하면서).
+    """
+    q_emb = embedder.embed_query(query)
+    result = collection.query(query_embeddings=[q_emb], n_results=fetch_k)
+
+    seen_slides = set()
+    diverse = []
+    for cid, doc, meta in zip(result["ids"][0], result["documents"][0], result["metadatas"][0]):
+        slide_no = meta["slide_no"]
+        if slide_no in seen_slides:
+            continue
+        seen_slides.add(slide_no)
+        diverse.append({"chunk_id": cid, "text": doc, "slide_no": slide_no})
+        if len(diverse) >= k:
+            break
+    return diverse
+
+
 # ---------------------- Retrieval 평가지표 ----------------------
 
 def recall_at_k(retrieved_ids: list[str], relevant_ids: set[str]) -> float:
