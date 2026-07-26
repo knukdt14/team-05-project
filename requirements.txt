@@ -2,8 +2,8 @@ python-pptx>=0.6.23
 chromadb>=1.5.0
 scikit-learn>=1.5.0        # LocalTestEmbedder(로컬 검증용)에 필요
 
-# 아래는 인터넷 되는 환경(다른 AI/로컬 PC)에서만 필요 - 이 샌드박스에서는 미설치
-sentence-transformers>=3.0.0   # ProductionEmbedder (intfloat/multilingual-e5-small)
+# 최초 실행 시 Hugging Face에서 모델 가중치를 다운로드함
+sentence-transformers>=3.0.0   # ProductionEmbedder (BAAI/bge-m3)
 transformers>=4.44.0            # generator.py (Qwen2.5-1.5B-Instruct)
 torch>=2.3.0
 bert-score>=0.3.13               # evaluator.bert_score_eval

@@ -15,6 +15,39 @@ def retrieve(collection, embedder, query: str, k: int = 3):
     ]
 
 
+def retrieve_diverse(
+    collection,
+    embedder,
+    query: str,
+    k: int = 5,
+    fetch_k: int = 15,
+):
+    """Return top-k chunks while keeping at most one chunk per slide."""
+    if fetch_k < k:
+        raise ValueError("fetch_k must be greater than or equal to k")
+
+    q_emb = embedder.embed_query(query)
+    result = collection.query(query_embeddings=[q_emb], n_results=fetch_k)
+
+    selected = []
+    seen_slides = set()
+    for chunk_id, text, metadata in zip(
+        result["ids"][0],
+        result["documents"][0],
+        result["metadatas"][0],
+    ):
+        slide_no = metadata["slide_no"]
+        if slide_no in seen_slides:
+            continue
+        seen_slides.add(slide_no)
+        selected.append(
+            {"chunk_id": chunk_id, "text": text, "slide_no": slide_no}
+        )
+        if len(selected) >= k:
+            break
+    return selected
+
+
 # ---------------------- Retrieval 평가지표 ----------------------
 
 def recall_at_k(retrieved_ids: list[str], relevant_ids: set[str]) -> float:

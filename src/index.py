@@ -7,15 +7,24 @@ embedder는 embeddings.py의 ProductionEmbedder 또는 LocalTestEmbedder를 주�
 import chromadb
 
 
-def build_index(chunks: list[dict], embedder, persist_dir: str = "./chroma_store",
-                 collection_name: str = "ajin_safety_quiz"):
+def build_index(
+    chunks: list[dict],
+    embedder,
+    persist_dir: str = "./chroma_store",
+    collection_name: str = "ajin_safety_quiz",
+    space: str = "l2",
+):
+    """청크를 임베딩해 지정한 거리 방식의 Chroma 컬렉션을 만든다."""
     client = chromadb.PersistentClient(path=persist_dir)
     # 재실행 시 중복 방지
     try:
         client.delete_collection(collection_name)
     except Exception:
         pass
-    collection = client.create_collection(collection_name)
+    collection = client.create_collection(
+        collection_name,
+        metadata={"hnsw:space": space},
+    )
 
     texts = [c["text"] for c in chunks]
     embeddings = embedder.embed_documents(texts)

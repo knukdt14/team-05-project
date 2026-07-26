@@ -1,0 +1,5 @@
+﻿rank,selected,strategy,chunk_size,overlap,chunks,avg_chars,recall@5,mrr,context_precision@5,diversity@5,evaluation_questions,embedding_model,top_k,fetch_k,distance
+1,True,sentence_pack,300,1,275,199.142,1.0,0.946667,0.2,1.0,100,BAAI/bge-m3,5,15,l2
+2,False,recursive,150,30,461,131.304,0.99,0.941667,0.198,1.0,100,BAAI/bge-m3,5,15,l2
+3,False,title_body,300,1,292,224.812,1.0,0.94,0.2,1.0,100,BAAI/bge-m3,5,15,l2
+4,False,slide_aware,300,1,266,218.256,1.0,0.939167,0.2,1.0,100,BAAI/bge-m3,5,15,l2

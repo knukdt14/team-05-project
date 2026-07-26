@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BGE-M3 청킹 방법 최종 선별</title>
+  <style>
+    body { margin: 0; padding: 32px; font-family: "Malgun Gothic", sans-serif;
+      color: #172033; background: #f4f7fb; }
+    main { max-width: 1100px; margin: auto; }
+    h1 { margin-bottom: 8px; }
+    .meta { color: #5d6b82; margin-bottom: 24px; }
+    .winner { padding: 16px 18px; margin-bottom: 20px; border-radius: 12px;
+      background: #e8f2ff; color: #123b80; font-size: 1.1rem; }
+    .table-wrap { overflow-x: auto; background: white; border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(23,32,51,.07); }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    th, td { padding: 13px 12px; text-align: right;
+      border-bottom: 1px solid #e3e8f0; }
+    th { background: #eef2f7; }
+    th:nth-child(2), td:nth-child(2) { text-align: left; }
+    tr.selected { background: #f0f7ff; }
+    .bar { display: inline-block; width: calc(var(--score) * 110px);
+      height: 10px; margin-right: 8px; border-radius: 999px;
+      background: #2563eb; vertical-align: middle; }
+    .rule { margin-top: 16px; color: #5d6b82; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>BGE-M3 청킹 방법 최종 선별</h1>
+    <p class="meta">BAAI/bge-m3 · 정규화 · 접두사 미사용 ·
+      L2 · top_k=5 · fetch_k=15 ·
+      평가질문 100개</p>
+    <div class="winner">최종 선별: <strong>sentence_pack</strong></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>순위</th><th>청킹 방법</th><th>크기</th><th>중첩</th>
+          <th>청크 수</th><th>Recall@5</th><th>MRR</th>
+          <th>Precision@5</th><th>Diversity@5</th></tr>
+        </thead>
+        <tbody>
+            <tr class="selected">
+              <td>1</td>
+              <td><strong>sentence_pack</strong> 최종 선택</td>
+              <td>300</td>
+              <td>1</td>
+              <td>275</td>
+              <td>1.0000</td>
+              <td>
+                <span class="bar" style="--score:0.946667"></span>
+                0.9467
+              </td>
+              <td>0.2000</td>
+              <td>1.0000</td>
+            </tr>
+            <tr class="">
+              <td>2</td>
+              <td><strong>recursive</strong> </td>
+              <td>150</td>
+              <td>30</td>
+              <td>461</td>
+              <td>0.9900</td>
+              <td>
+                <span class="bar" style="--score:0.941667"></span>
+                0.9417
+              </td>
+              <td>0.1980</td>
+              <td>1.0000</td>
+            </tr>
+            <tr class="">
+              <td>3</td>
+              <td><strong>title_body</strong> </td>
+              <td>300</td>
+              <td>1</td>
+              <td>292</td>
+              <td>1.0000</td>
+              <td>
+                <span class="bar" style="--score:0.940000"></span>
+                0.9400
+              </td>
+              <td>0.2000</td>
+              <td>1.0000</td>
+            </tr>
+            <tr class="">
+              <td>4</td>
+              <td><strong>slide_aware</strong> </td>
+              <td>300</td>
+              <td>1</td>
+              <td>266</td>
+              <td>1.0000</td>
+              <td>
+                <span class="bar" style="--score:0.939167"></span>
+                0.9392
+              </td>
+              <td>0.2000</td>
+              <td>1.0000</td>
+            </tr></tbody>
+      </table>
+    </div>
+    <p class="rule">선별 기준: MRR 우선, Recall, Precision, 적은 청크 수 순.</p>
+  </main>
+</body>
+</html>

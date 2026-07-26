@@ -202,6 +202,7 @@ cython_debug/
 # .vscode/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
+.chunking_selection_bge_m3/
 
 # Ruff stuff:
 .ruff_cache/

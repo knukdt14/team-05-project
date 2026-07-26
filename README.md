@@ -78,3 +78,50 @@ flowchart LR
 - 모델 비교 시 프롬프트와 검색 결과를 동일하게 고정합니다.
 - 검색 비교 시 생성 모델과 프롬프트를 동일하게 고정합니다.
 - 모든 결과에 설정 파일, 모델명, seed, 실행 시간을 저장합니다.
+
+## 5. BGE-M3로 최종 청킹 방법 선별
+
+`src/select_chunking_bge_m3.py`는 임베딩·검색 조건을 아래 값으로 고정하고
+청킹 방법만 바꿔 비교합니다.
+
+| 항목 | 고정값 |
+| --- | --- |
+| 임베딩 모델 | `BAAI/bge-m3` |
+| 임베딩 정규화 | 사용 |
+| Query/Passage 접두사 | 미사용 |
+| 거리 방식 | `l2` |
+| 검색 방식 | 슬라이드 중복 제거 검색 |
+| Top-K | 5 |
+| Fetch-K | 15 |
+| 평가셋 | `eval_questions_100.json` 100문항 |
+
+비교하는 청킹 방법은 `recursive`, `sentence_pack`, `slide_aware`,
+`title_body` 네 가지입니다. MRR을 우선 기준으로 사용하고 동률이면
+Recall@5, Precision@5, 적은 청크 수 순으로 최종 방법을 정합니다.
+
+프로젝트 루트에서 실행합니다.
+
+```powershell
+python src\select_chunking_bge_m3.py
+```
+
+PPT 경로를 직접 지정할 수도 있습니다.
+
+```powershell
+python src\select_chunking_bge_m3.py `
+  --pptx "C:\데이터\경북대 교육 발표자료 250416-1.pptx"
+```
+
+실행 중 터미널에 순위표와 최종 선별 방법이 출력됩니다. 결과 시각화는
+이미지가 아니라 다음 두 파일로 저장됩니다.
+
+```text
+result/chunking_selection_bge_m3.csv
+result/chunking_selection_bge_m3.html
+```
+
+CSV는 Excel에서 점수를 비교할 때 사용하고, HTML은 브라우저에서 표와
+MRR 막대를 확인할 때 사용합니다. CSV·HTML을 먼저 저장한 뒤 평가용
+Chroma 인덱스 삭제를 시도합니다. Windows 파일 잠금으로 삭제되지 않아도
+결과 파일에는 영향이 없으며, Python 종료 후 해당 폴더를 직접 삭제할 수
+있습니다. 인덱스를 유지하려면 `--keep-index`를 지정합니다.
