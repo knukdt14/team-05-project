@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project-local environments and generated artifacts
+.venv/
+data/*.pptx
+results/chroma/
+results/*.tmp

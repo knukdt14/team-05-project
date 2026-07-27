@@ -1,99 +1,166 @@
-"""
-src/chunking.py
-글자수 150 기준 recursive 청킹.
-- 우선 문단(\n\n 또는 \n) 단위로 쪼개려고 시도
-- 그래도 150자를 넘으면 문장(다./함./음. 등) 단위로 재분할
-- 그래도 넘으면 글자수로 강제 분할
-- overlap: 앞 청크 끝 30자를 다음 청크 시작에 겹쳐서 문맥 단절 완화
-"""
+"""PowerPoint chunking implementations used by the quiz generator."""
+
+from __future__ import annotations
+
 import re
-
-CHUNK_SIZE = 150
-OVERLAP = 30
+from typing import Any, Iterable
 
 
-def _split_by_sentence(text: str) -> list[str]:
-    # 한국어 문장 종결 패턴 기준 분할 (마침표/물음표/느낌표 뒤)
-    sentences = re.split(r"(?<=[.!?])\s+", text)
-    return [s for s in sentences if s.strip()]
+SUPPORTED_STRATEGIES = (
+    "recursive",
+    "sentence_pack",
+    "slide_aware",
+    "title_body",
+)
+CHUNKING_CONFIGS = {
+    "recursive": {"chunk_size": 150, "overlap": 30},
+    "sentence_pack": {"chunk_size": 300, "overlap": 1},
+    "slide_aware": {"chunk_size": 300, "overlap": 1},
+    "title_body": {"chunk_size": 300, "overlap": 1},
+}
+SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?。！？])\s+")
 
 
-def recursive_chunk(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = OVERLAP) -> list[str]:
-    paragraphs = [p for p in text.split("\n") if p.strip()]
-
-    # 1) 문단들을 chunk_size 이하로 최대한 묶어봄
-    chunks = []
-    buf = ""
-    for para in paragraphs:
-        candidate = (buf + "\n" + para).strip() if buf else para
-        if len(candidate) <= chunk_size:
-            buf = candidate
-        else:
-            if buf:
-                chunks.append(buf)
-            # 문단 자체가 chunk_size보다 길면 문장 단위로 재귀 분할
-            if len(para) > chunk_size:
-                chunks.extend(_split_by_sentence_to_size(para, chunk_size))
-                buf = ""
-            else:
-                buf = para
-    if buf:
-        chunks.append(buf)
-
-    # 2) overlap 적용
-    overlapped = []
-    for i, c in enumerate(chunks):
-        if i > 0 and overlap > 0:
-            prev_tail = chunks[i - 1][-overlap:]
-            c = prev_tail + " " + c
-        overlapped.append(c)
-
-    return overlapped
+def _lines(text: str) -> list[str]:
+    return [line.strip() for line in text.splitlines() if line.strip()]
 
 
-def _split_by_sentence_to_size(text: str, chunk_size: int) -> list[str]:
-    sentences = _split_by_sentence(text)
-    chunks, buf = [], ""
-    for s in sentences:
-        candidate = (buf + " " + s).strip() if buf else s
-        if len(candidate) <= chunk_size:
-            buf = candidate
-        else:
-            if buf:
-                chunks.append(buf)
-            # 문장 하나가 chunk_size보다 길면 글자수로 강제 분할
-            if len(s) > chunk_size:
-                for j in range(0, len(s), chunk_size):
-                    chunks.append(s[j:j + chunk_size])
-                buf = ""
-            else:
-                buf = s
-    if buf:
-        chunks.append(buf)
+def sentence_units(text: str) -> list[str]:
+    units = []
+    for line in _lines(text):
+        units.extend(
+            part.strip()
+            for part in SENTENCE_BOUNDARY.split(line)
+            if part.strip()
+        )
+    return units
+
+
+def _hard_split(text: str, size: int) -> list[str]:
+    return [text[start : start + size] for start in range(0, len(text), size)]
+
+
+def _pack(units: Iterable[str], size: int, overlap_units: int) -> list[str]:
+    normalized = []
+    for unit in units:
+        clean = unit.strip()
+        if not clean:
+            continue
+        normalized.extend([clean] if len(clean) <= size else _hard_split(clean, size))
+
+    chunks: list[str] = []
+    current: list[str] = []
+    for unit in normalized:
+        if current and len("\n".join([*current, unit])) > size:
+            chunks.append("\n".join(current))
+            current = current[-overlap_units:] if overlap_units else []
+            while current and len("\n".join([*current, unit])) > size:
+                current.pop(0)
+        current.append(unit)
+    if current:
+        final = "\n".join(current)
+        if not chunks or chunks[-1] != final:
+            chunks.append(final)
     return chunks
 
 
-def chunk_documents(docs: list[dict]) -> list[dict]:
-    """[{slide_no, text}] -> [{chunk_id, slide_no, text}]"""
-    all_chunks = []
-    cid = 0
-    for doc in docs:
-        for piece in recursive_chunk(doc["text"]):
-            all_chunks.append({
-                "chunk_id": f"c{cid:04d}",
-                "slide_no": doc["slide_no"],
-                "text": piece,
-            })
-            cid += 1
-    return all_chunks
+def recursive_chunk(text: str, size: int = 150, overlap: int = 30) -> list[str]:
+    if size <= 0 or overlap < 0 or overlap >= size:
+        raise ValueError("recursive 설정은 size > 0, 0 <= overlap < size여야 합니다.")
+    chunks = _pack(sentence_units(text), size, 0)
+    return [
+        f"{chunks[index - 1][-overlap:]} {chunk}" if index and overlap else chunk
+        for index, chunk in enumerate(chunks)
+    ]
 
 
-if __name__ == "__main__":
-    from documents import extract_slide_texts
-    docs = extract_slide_texts("../../deck.pptx")
-    chunks = chunk_documents(docs)
-    print(f"총 {len(docs)}개 슬라이드 -> {len(chunks)}개 청크 (chunk_size={CHUNK_SIZE})")
-    lens = [len(c["text"]) for c in chunks]
-    print(f"청크 길이 평균 {sum(lens)/len(lens):.1f}자, 최대 {max(lens)}자, 최소 {min(lens)}자")
-    for c in chunks[15:18]:
-        print(c)
+def sentence_pack_chunk(text: str, size: int = 300, overlap: int = 1) -> list[str]:
+    return _pack(sentence_units(text), size, overlap)
+
+
+def _title_body(text: str) -> tuple[str, str]:
+    lines = _lines(text)
+    return (lines[0], "\n".join(lines[1:])) if lines else ("", "")
+
+
+def _format(title: str, body: str) -> str:
+    return "\n".join(
+        value for value in [f"[제목] {title}" if title else "", body] if value
+    )
+
+
+def _pieces_for_document(
+    document: dict[str, Any],
+    strategy: str,
+    size: int,
+    overlap: int,
+) -> list[dict[str, Any]]:
+    text = str(document.get("text", ""))
+    if strategy == "recursive":
+        return [{"text": value} for value in recursive_chunk(text, size, overlap)]
+    if strategy == "sentence_pack":
+        return [{"text": value} for value in sentence_pack_chunk(text, size, overlap)]
+
+    if strategy == "slide_aware":
+        title, body = _title_body(text)
+    else:
+        title = str(document.get("title", "")).strip()
+        groups = document.get("body_groups") or []
+        body = "\n".join(
+            str(group.get("text", "")).strip()
+            for group in groups
+            if str(group.get("text", "")).strip()
+        )
+        if not body:
+            _, body = _title_body(text)
+
+    if not title and not body:
+        return []
+    bodies = (
+        [body]
+        if len(body) <= size
+        else sentence_pack_chunk(body, size=size, overlap=overlap)
+    )
+    return [{"text": _format(title, value), "title": title} for value in bodies or [""]]
+
+
+def chunk_documents(
+    documents: list[dict[str, Any]],
+    strategy: str,
+    *,
+    chunk_size: int | None = None,
+    overlap: int | None = None,
+    document_id: str = "ajin_training_250416",
+) -> list[dict[str, Any]]:
+    if strategy not in SUPPORTED_STRATEGIES:
+        raise ValueError(f"지원하지 않는 전략: {strategy}")
+    config = CHUNKING_CONFIGS[strategy]
+    size = config["chunk_size"] if chunk_size is None else chunk_size
+    overlap_value = config["overlap"] if overlap is None else overlap
+
+    chunks = []
+    for document in documents:
+        slide_no = int(document["slide_no"])
+        pieces = _pieces_for_document(
+            document,
+            strategy,
+            size,
+            overlap_value,
+        )
+        for index, piece in enumerate(pieces, start=1):
+            text = piece["text"].strip()
+            if not text:
+                continue
+            chunks.append(
+                {
+                    "chunk_id": f"{document_id}-p{slide_no:03d}-c{index:02d}",
+                    "slide_no": slide_no,
+                    "slide_chunk_index": index - 1,
+                    "text": text,
+                    "title": piece.get("title", document.get("title", "")),
+                    "chunk_method": strategy,
+                    "chunk_size": size,
+                    "overlap": overlap_value,
+                }
+            )
+    return chunks

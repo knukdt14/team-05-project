@@ -1,39 +1,120 @@
-"""
-src/documents.py
-pptx 파일에서 슬라이드별로 텍스트를 추출한다.
-- python-pptx로 각 슬라이드의 모든 텍스트 도형(title, body, table, textbox)을 순회
-- 표(table)는 행 단위로 " | "로 이어붙여서 표 구조가 최대한 유지되도록 함
-"""
+"""PowerPoint text extraction with title/body structure preserved."""
+
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Any, Iterable
+
 from pptx import Presentation
+from pptx.enum.shapes import MSO_SHAPE_TYPE, PP_PLACEHOLDER
 
 
-def extract_slide_texts(pptx_path: str) -> list[dict]:
-    """슬라이드별 {slide_no, text} 딕셔너리 리스트를 반환."""
-    prs = Presentation(pptx_path)
+TITLE_TYPES = {
+    PP_PLACEHOLDER.TITLE,
+    PP_PLACEHOLDER.CENTER_TITLE,
+    PP_PLACEHOLDER.VERTICAL_TITLE,
+}
+
+
+def _leaf_shapes(shapes) -> Iterable:
+    for shape in shapes:
+        if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
+            yield from _leaf_shapes(shape.shapes)
+        else:
+            yield shape
+
+
+def _text_lines(shape) -> list[str]:
+    lines = []
+    for paragraph in shape.text_frame.paragraphs:
+        text = "".join(run.text for run in paragraph.runs).strip()
+        if text:
+            lines.append(text)
+    return lines
+
+
+def _table_lines(shape) -> list[str]:
+    lines = []
+    for row in shape.table.rows:
+        cells = [cell.text.strip() for cell in row.cells]
+        if any(cells):
+            lines.append(" | ".join(cells))
+    return lines
+
+
+def _is_title(shape) -> bool:
+    if not getattr(shape, "is_placeholder", False):
+        return False
+    try:
+        return shape.placeholder_format.type in TITLE_TYPES
+    except (AttributeError, KeyError, ValueError):
+        return False
+
+
+def extract_slide_structures(pptx_path: str | Path) -> list[dict[str, Any]]:
+    """Return slide number, title, ordered body groups, and flat text."""
+    path = Path(pptx_path)
+    if not path.exists():
+        raise FileNotFoundError(f"PPTX 파일을 찾을 수 없습니다: {path}")
+
+    presentation = Presentation(str(path))
     results = []
+    for slide_no, slide in enumerate(presentation.slides, start=1):
+        title = ""
+        elements = []
+        for shape in _leaf_shapes(slide.shapes):
+            if getattr(shape, "has_table", False):
+                lines = _table_lines(shape)
+                kind = "table"
+            elif getattr(shape, "has_text_frame", False):
+                lines = _text_lines(shape)
+                kind = "text"
+            else:
+                continue
+            if not lines:
+                continue
+            text = "\n".join(lines)
+            if kind == "text" and _is_title(shape):
+                title = text
+                continue
+            elements.append(
+                {
+                    "shape_id": int(shape.shape_id),
+                    "type": kind,
+                    "text": text,
+                    "lines": lines,
+                    "top": int(getattr(shape, "top", 0)),
+                    "left": int(getattr(shape, "left", 0)),
+                }
+            )
 
-    for i, slide in enumerate(prs.slides, start=1):
-        parts = []
-        for shape in slide.shapes:
-            if shape.has_text_frame:
-                for para in shape.text_frame.paragraphs:
-                    line = "".join(run.text for run in para.runs)
-                    if line.strip():
-                        parts.append(line.strip())
-            elif shape.has_table:
-                for row in shape.table.rows:
-                    cells = [c.text.strip() for c in row.cells]
-                    if any(cells):
-                        parts.append(" | ".join(cells))
+        elements.sort(key=lambda value: (value["top"], value["left"]))
+        if not title:
+            candidates = [
+                value
+                for value in elements
+                if value["type"] == "text" and len(value["text"]) <= 120
+            ]
+            if candidates:
+                title = candidates[0]["text"]
+                elements.remove(candidates[0])
 
-        text = "\n".join(parts)
-        results.append({"slide_no": i, "text": text})
-
+        flat = [value for value in [title, *[e["text"] for e in elements]] if value]
+        results.append(
+            {
+                "slide_no": slide_no,
+                "title": title,
+                "body_groups": elements,
+                "text": "\n".join(flat),
+            }
+        )
     return results
 
 
-if __name__ == "__main__":
-    docs = extract_slide_texts("../../deck.pptx")
-    print(f"총 {len(docs)}개 슬라이드 추출")
-    print(docs[8])  # 슬라이드 9번 미리보기
+def extract_slide_texts(pptx_path: str | Path) -> list[dict[str, Any]]:
+    """Return the backward-compatible flat slide schema."""
+    return [
+        {"slide_no": item["slide_no"], "text": item["text"]}
+        for item in extract_slide_structures(pptx_path)
+    ]
+

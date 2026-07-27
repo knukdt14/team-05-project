@@ -1,0 +1,5 @@
+[project]
+name = "integrated-final-rag-quiz-pipeline"
+version = "0.1.0"
+description = "BGE-M3 retrieval and Qwen2.5-3B quiz generation pipeline"
+requires-python = ">=3.11,<3.12"
