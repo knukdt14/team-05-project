@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import traceback
 from pathlib import Path
 
 from chunking import chunk_documents
@@ -11,17 +12,20 @@ from embeddings import BGEEmbedder
 from quiz_generator import generate_quiz, load_llm
 from retriever import retrieve_diverse
 from settings import PROJECT_ROOT, load_config
+from topic_sampler import extract_topics, apply_manual_groups, sample_topics
 from vector_store import build_index
 
 
 DEFAULT_OUTPUT = PROJECT_ROOT / "results" / "generated_quizzes.json"
+FAILURE_LOG = PROJECT_ROOT / "results" / "failed_topics.json"
 
 # 실행 설정: 명령행 옵션 대신 이 값만 수정한다.
 PPTX_PATH = PROJECT_ROOT / "data" / "경북대 교육 발표자료 250416-1.pptx"
 CHUNKING_STRATEGY = "sentence_pack"
-QUIZ_TOPICS = [
-    "중간날림의 원인",
-]
+
+# PPT에서 주제 후보를 자동 추출한 뒤, 그룹핑과 샘플링으로 최종 주제를 결정한다.
+_TOPIC_POOL = apply_manual_groups(extract_topics(PPTX_PATH))
+QUIZ_TOPICS = sample_topics(_TOPIC_POOL, n=5, seed=42)
 QUIZ_TYPE = "multiple_choice"
 VALIDATE_CHOICES = True
 
@@ -64,6 +68,16 @@ def save_results(quizzes: list[dict], output_path: str | Path) -> Path:
     return path
 
 
+def save_failures(failures: list[dict], output_path: str | Path) -> Path:
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(failures, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
 def main() -> None:
     if not PPTX_PATH.exists():
         raise FileNotFoundError(f"PPTX 파일이 없습니다: {PPTX_PATH}")
@@ -72,6 +86,7 @@ def main() -> None:
 
     print(f"PPTX: {PPTX_PATH}")
     print(f"청킹 방법: {CHUNKING_STRATEGY}")
+    print(f"주제 후보 수({len(QUIZ_TOPICS)}개): {QUIZ_TOPICS}")
     config, embedder, collection = prepare_pipeline(
         PPTX_PATH,
         CHUNKING_STRATEGY,
@@ -79,7 +94,8 @@ def main() -> None:
 
     print(f"생성 모델 로딩: {config['llm_model']}")
     generator = load_llm(config["llm_model"])
-    quizzes = []
+    quizzes: list[dict] = []
+    failures: list[dict] = []
 
     def create(topic: str) -> None:
         retrieved = retrieve_diverse(
@@ -95,6 +111,7 @@ def main() -> None:
             retrieved,
             quiz_id=f"quiz-{len(quizzes) + 1:03d}",
             quiz_type=QUIZ_TYPE,
+            max_attempts=5,
             file_label=config["file_label"],
             validate_choices=VALIDATE_CHOICES,
         )
@@ -102,8 +119,26 @@ def main() -> None:
         print(json.dumps(quiz, ensure_ascii=False, indent=2))
         print("저장:", save_results(quizzes, DEFAULT_OUTPUT))
 
-    for topic in QUIZ_TOPICS:
-        create(topic)
+    for index, topic in enumerate(QUIZ_TOPICS, start=1):
+        print(f"\n[{index}/{len(QUIZ_TOPICS)}] 주제: {topic}")
+        try:
+            create(topic)
+        except Exception as error:  # noqa: BLE001 - 실패한 주제는 기록하고 계속 진행
+            print(f"  실패: {error!r}")
+            failures.append({
+                "topic": topic,
+                "error": str(error),
+                "traceback": traceback.format_exc(),
+            })
+            print("실패 목록:", save_failures(failures, FAILURE_LOG))
+            continue
+
+    print(f"\n{'=' * 60}")
+    print(f"완료: 생성 {len(quizzes)}개 / 실패 {len(failures)}개 (전체 {len(QUIZ_TOPICS)}개)")
+    if failures:
+        print(f"실패 주제: {[item['topic'] for item in failures]}")
+        print(f"실패 상세 로그: {FAILURE_LOG}")
+    print("=" * 60)
 
 
 if __name__ == "__main__":
