@@ -51,17 +51,23 @@ def _choices_markup(quiz: dict[str, Any]) -> str:
     ).join(["<ol class=\"choices\">\n", "\n</ol>"])
 
 
-def _source_markup(source: Any) -> str:
-    if not isinstance(source, dict):
+def _source_markup(sources: Any) -> str:
+    if not isinstance(sources, list):
         return ""
-    parts = []
-    if source.get("file") not in (None, ""):
-        parts.append(_escape(source["file"]))
-    if source.get("slide") not in (None, ""):
-        parts.append(f"슬라이드 {_escape(source['slide'])}")
-    if source.get("chunk_id") not in (None, ""):
-        parts.append(_escape(source["chunk_id"]))
-    return " · ".join(parts)
+    items = []
+    for source in sources:
+        if not isinstance(source, dict):
+            continue
+        parts = []
+        if source.get("file") not in (None, ""):
+            parts.append(_escape(source["file"]))
+        if source.get("slide") not in (None, ""):
+            parts.append(f"슬라이드 {_escape(source['slide'])}")
+        if source.get("chunk_id") not in (None, ""):
+            parts.append(_escape(source["chunk_id"]))
+        if parts:
+            items.append(" · ".join(parts))
+    return " / ".join(items)
 
 
 def render_quizzes(quizzes: list[dict[str, Any]], title: str) -> str:
@@ -73,7 +79,7 @@ def render_quizzes(quizzes: list[dict[str, Any]], title: str) -> str:
     cards = []
     for index, quiz in enumerate(quizzes, start=1):
         quiz_type = str(quiz.get("type", "unknown"))
-        source = _source_markup(quiz.get("source"))
+        source = _source_markup(quiz.get("sources"))
         cards.append(
             f"""
       <article class="quiz-card">
