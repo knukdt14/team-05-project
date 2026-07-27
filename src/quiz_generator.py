@@ -19,7 +19,7 @@ class QuizDraft(BaseModel):
     answer: int | str
     explanation: str = Field(min_length=1)
     evidence: str = Field(min_length=1)
-    source_ref: int = Field(ge=1)
+    source_refs: list[int] = Field(min_length=1)
 
 
 SYSTEM_PROMPT = """\
@@ -37,10 +37,10 @@ SYSTEM_PROMPT = """\
 OX 문제는 choices=["O","X"], answer는 1 또는 2로 작성한다.
 단답형은 choices=[], answer는 정답 문자열로 작성한다.
 evidence는 참고자료의 근거 문장을 작성한다.
-source_ref는 사용한 자료 번호다.
+source_refs는 근거로 사용한 자료 번호들의 리스트다. 예: [1] 또는 [1, 2]. 자료 번호(정수)만 넣어라(chunk_id 금지).
 
 설명이나 코드 블록 없이 다음 키를 가진 JSON 객체 하나만 출력하라:
-type, question, choices, answer, explanation, evidence, source_ref
+type, question, choices, answer, explanation, evidence, source_refs
 
 [참고자료]
 {context}
@@ -124,8 +124,7 @@ def extract_json(text: str) -> dict[str, Any]:
 def build_context(retrieved: list[dict[str, Any]]) -> str:
     return "\n\n".join(
         (
-            f"자료 {index} | 슬라이드 {item['slide_no']} | "
-            f"청크 {item['chunk_id']}\n{item['text']}"
+            f"자료 {index} | 슬라이드 {item['slide_no']}\n{item['text']}"
         )
         for index, item in enumerate(retrieved, start=1)
     )
@@ -209,12 +208,18 @@ def generate_quiz(
                 if not valid:
                     raise ValueError(f"복수정답/모호성 검증 실패: {reason}")
 
-            if draft.source_ref > len(retrieved):
-                raise ValueError(
-                    f"source_ref는 1~{len(retrieved)} 범위여야 합니다."
-                )
-            source_index = draft.source_ref - 1
-            source_chunk = retrieved[source_index]
+            sources = []
+            for ref in draft.source_refs:
+                if not 1 <= ref <= len(retrieved):
+                    raise ValueError(
+                        f"source_refs 번호는 1~{len(retrieved)} 범위여야 합니다: {ref}"
+                    )
+                chunk = retrieved[ref - 1]
+                sources.append({
+                    "file": file_label,
+                    "slide": chunk["slide_no"],
+                    "chunk_id": chunk["chunk_id"],
+                })
             return {
                 "quiz_id": quiz_id,
                 "type": draft.type,
@@ -223,11 +228,7 @@ def generate_quiz(
                 "answer": draft.answer,
                 "explanation": draft.explanation.strip(),
                 "evidence": draft.evidence.strip(),
-                "source": {
-                    "file": file_label,
-                    "slide": source_chunk["slide_no"],
-                    "chunk_id": source_chunk["chunk_id"],
-                },
+                "sources": sources,
             }
         except (ValueError, ValidationError, json.JSONDecodeError) as error:
             failure = str(error)
