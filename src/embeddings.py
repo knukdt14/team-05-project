@@ -29,7 +29,7 @@ class BGEEmbedder:
         # pickle을 사용하지 않는 safetensors 가중치를 우선 사용한다.
         self.model = SentenceTransformer(
             model_name,
-            model_kwargs={"use_safetensors": True},
+            model_kwargs={"use_safetensors": False},
             device=self.device,
         )
         print(f"Embedding device: {self.device}")
