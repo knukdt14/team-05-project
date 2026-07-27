@@ -12,7 +12,7 @@ from embeddings import BGEEmbedder
 from quiz_generator import generate_quiz, load_llm
 from retriever import retrieve_diverse
 from settings import PROJECT_ROOT, load_config
-from topic_sampler import extract_topics, apply_manual_groups, sample_topics
+from topic import extract_topics_llm, sample_topics
 from vector_store import build_index
 
 
@@ -23,9 +23,9 @@ FAILURE_LOG = PROJECT_ROOT / "results" / "failed_topics.json"
 PPTX_PATH = PROJECT_ROOT / "data" / "경북대 교육 발표자료 250416-1.pptx"
 CHUNKING_STRATEGY = "sentence_pack"
 
-# PPT에서 주제 후보를 자동 추출한 뒤, 그룹핑과 샘플링으로 최종 주제를 결정한다.
-_TOPIC_POOL = apply_manual_groups(extract_topics(PPTX_PATH))
-QUIZ_TOPICS = sample_topics(_TOPIC_POOL, n=5, seed=42)
+# 주제는 main()에서 LLM(topic.py)으로 슬라이드를 요약해 추출한다 (Solar 재사용).
+TOPIC_COUNT = 15
+TOPIC_SEED = 10
 QUIZ_TYPE = "multiple_choice"
 VALIDATE_CHOICES = True
 
@@ -81,12 +81,9 @@ def save_failures(failures: list[dict], output_path: str | Path) -> Path:
 def main() -> None:
     if not PPTX_PATH.exists():
         raise FileNotFoundError(f"PPTX 파일이 없습니다: {PPTX_PATH}")
-    if not QUIZ_TOPICS:
-        raise ValueError("QUIZ_TOPICS에 생성할 주제를 하나 이상 입력하세요.")
 
     print(f"PPTX: {PPTX_PATH}")
     print(f"청킹 방법: {CHUNKING_STRATEGY}")
-    print(f"주제 후보 수({len(QUIZ_TOPICS)}개): {QUIZ_TOPICS}")
     config, embedder, collection = prepare_pipeline(
         PPTX_PATH,
         CHUNKING_STRATEGY,
@@ -94,6 +91,14 @@ def main() -> None:
 
     print(f"생성 모델 로딩: {config['llm_model']}")
     generator = load_llm(config["llm_model"])
+
+    # LLM으로 슬라이드에서 주제 추출(캐시 있으면 재사용) 후 샘플링
+    topic_pool = extract_topics_llm(PPTX_PATH, generator, use_cache=True)
+    quiz_topics = sample_topics(topic_pool, n=TOPIC_COUNT, seed=TOPIC_SEED)
+    if not quiz_topics:
+        raise ValueError("추출된 주제가 없습니다. topic.py를 확인하세요.")
+    print(f"주제({len(quiz_topics)}개): {quiz_topics}")
+
     quizzes: list[dict] = []
     failures: list[dict] = []
 
@@ -119,8 +124,8 @@ def main() -> None:
         print(json.dumps(quiz, ensure_ascii=False, indent=2))
         print("저장:", save_results(quizzes, DEFAULT_OUTPUT))
 
-    for index, topic in enumerate(QUIZ_TOPICS, start=1):
-        print(f"\n[{index}/{len(QUIZ_TOPICS)}] 주제: {topic}")
+    for index, topic in enumerate(quiz_topics, start=1):
+        print(f"\n[{index}/{len(quiz_topics)}] 주제: {topic}")
         try:
             create(topic)
         except Exception as error:  # noqa: BLE001 - 실패한 주제는 기록하고 계속 진행
@@ -134,7 +139,7 @@ def main() -> None:
             continue
 
     print(f"\n{'=' * 60}")
-    print(f"완료: 생성 {len(quizzes)}개 / 실패 {len(failures)}개 (전체 {len(QUIZ_TOPICS)}개)")
+    print(f"완료: 생성 {len(quizzes)}개 / 실패 {len(failures)}개 (전체 {len(quiz_topics)}개)")
     if failures:
         print(f"실패 주제: {[item['topic'] for item in failures]}")
         print(f"실패 상세 로그: {FAILURE_LOG}")

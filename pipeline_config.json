@@ -1,8 +1,8 @@
 {
   "embedding_model": "BAAI/bge-m3",
   "embedding_use_prefix": false,
-  "llm_provider": "hf",
-  "llm_model": "Qwen/Qwen2.5-3B-Instruct",
+  "llm_provider": "upstage",
+  "llm_model": "solar-pro",
   "top_k": 5,
   "fetch_k": 15,
   "distance": "l2",

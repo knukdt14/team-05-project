@@ -1,15 +1,18 @@
-"""Qwen-3B quiz generation with schema checks and single-answer validation."""
+"""Solar API 기반 퀴즈 생성 (스키마 검증 + 단일정답/부정형 설계)."""
 
 from __future__ import annotations
 
 import json
+import os
 from typing import Any, Literal
 
+import requests
 from pydantic import BaseModel, Field, ValidationError
-from transformers import AutoTokenizer, GenerationConfig, pipeline
 
 
-FINAL_LLM_MODEL = "Qwen/Qwen2.5-3B-Instruct"
+# 업스테이지 Solar API (OpenAI 호환). 경량/저렴은 "solar-mini".
+FINAL_LLM_MODEL = "solar-pro"
+UPSTAGE_ENDPOINT = "https://api.upstage.ai/v1/chat/completions"
 
 
 class QuizDraft(BaseModel):
@@ -75,6 +78,9 @@ TARGET_PROMPT = """\
 - "원인은 무엇인가?"처럼 여러 항목이 답이 될 수 있는 질문을 만들지 마라.
 - 원래 주제 또는 유사한 질문에 답이 될 수 있는 나머지 사실은 other_valid_answers에 모두 넣어라.
 - correct_answer를 other_valid_answers에 넣지 마라.
+- 질문에 correct_answer 단어(또는 그 일부·유사어·영문명)를 절대 포함하지 마라. 정답 명칭을 질문에 노출하면 안 된다.
+- 정답의 명칭 대신 그 특징·용도·조건만 제시하고, 명칭은 보기에서 고르게 하라.
+- 자료 문장을 그대로 옮겨 "이것의 이름은?" 식으로 정의를 낭독하지 마라. 구분·비교·적용을 묻는 형태로 만들어라.
 - evidence는 참고자료의 실제 근거 문장이어야 한다.
 - source_refs에는 사용한 자료 번호만 정수로 넣어라.
 - null과 빈 문자열을 사용하지 마라.
@@ -170,7 +176,8 @@ QUESTION_REWRITE_PROMPT = """\
 - "원인은 무엇인가?", "종류는 무엇인가?"처럼 여러 답을 허용하는 표현을 금지한다.
 - correct_answer의 대상, 조건, 관계 또는 상태를 evidence에서 찾아 질문에 명시하라.
 - other_valid_answers가 자연스럽게 답할 수 없는 질문이어야 한다.
-- 질문 안에 정답 전체를 그대로 노출하지 마라.
+- 질문에 correct_answer 단어(또는 그 일부·유사어·영문명)를 절대 포함하지 마라.
+- 정답 명칭 대신 특징·용도·조건만으로 추론하게 하고, 정의를 그대로 낭독하지 마라.
 - JSON 객체 하나만 출력하라.
 
 출력:
@@ -209,33 +216,23 @@ JUDGE_PROMPT = """\
 
 
 def load_llm(model_name: str = FINAL_LLM_MODEL):
-    import torch
+    """Solar API 클라이언트를 준비한다(모델 다운로드·GPU 불필요).
+    UPSTAGE_API_KEY 환경변수(.env 포함)가 필요하다."""
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
 
-    if not torch.cuda.is_available():
+    api_key = os.environ.get("UPSTAGE_API_KEY")
+    if not api_key:
         raise RuntimeError(
-            "CUDA GPU를 사용할 수 없습니다. GPU용 PyTorch 환경에서 실행하세요."
+            "UPSTAGE_API_KEY가 없습니다. .env 또는 환경변수에 키를 설정하세요."
         )
-
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_name,
-        clean_up_tokenization_spaces=False,
-    )
-    return pipeline(
-        "text-generation",
-        model=model_name,
-        tokenizer=tokenizer,
-        device=0,
-        torch_dtype=torch.float16,
-    )
-
-
-def _content(output: Any) -> str:
-    generated = output[0].get("generated_text", output[0])
-    if isinstance(generated, list):
-        for message in reversed(generated):
-            if isinstance(message, dict) and "content" in message:
-                return str(message["content"])
-    return str(generated)
+    # config가 Qwen 경로 등을 넘겨도 Solar 모델로 대체
+    if "/" in model_name or "qwen" in model_name.lower():
+        model_name = FINAL_LLM_MODEL
+    return {"api_key": api_key, "model": model_name}
 
 
 def _invoke(
@@ -245,30 +242,24 @@ def _invoke(
     *,
     do_sample: bool = False,
 ) -> str:
-    generation_options: dict[str, Any] = {
-        "max_new_tokens": max_new_tokens,
-        "max_length": None,
-        "do_sample": do_sample,
-        "pad_token_id": getattr(
-            getattr(generator, "tokenizer", None),
-            "eos_token_id",
-            None,
-        ),
+    """Solar API(OpenAI 호환) 채팅 완성 호출."""
+    payload = {
+        "model": generator["model"],
+        "messages": messages,
+        "max_tokens": max_new_tokens,
+        "temperature": 0.7 if do_sample else 0.0,
     }
-    if do_sample:
-        generation_options.update(
-            {
-                "temperature": 0.7,
-                "top_p": 0.9,
-            }
-        )
-    generation_config = GenerationConfig(**generation_options)
-    output = generator(
-        messages,
-        generation_config=generation_config,
-        return_full_text=False,
+    response = requests.post(
+        UPSTAGE_ENDPOINT,
+        headers={
+            "Authorization": f"Bearer {generator['api_key']}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=90,
     )
-    return _content(output)
+    response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]
 
 
 def extract_json(text: str) -> dict[str, Any]:
@@ -439,7 +430,7 @@ def _generate_multiple_choice_target(
                 cleaned_other_answers.append(answer.strip())
             target.other_valid_answers = cleaned_other_answers
 
-            valid, _ = _target_single_answer_check(generator, context, target)
+            valid, valid_reason = _target_single_answer_check(generator, context, target)
             if not valid:
                 rewritten_question = _rewrite_target_question(
                     generator,
@@ -449,18 +440,26 @@ def _generate_multiple_choice_target(
                 rewritten_target = target.model_copy(
                     update={"question": rewritten_question}
                 )
-                rewritten_valid, _ = _target_single_answer_check(
+                rewritten_valid, rewritten_reason = _target_single_answer_check(
                     generator,
                     context,
                     rewritten_target,
                 )
-                if rewritten_valid:
-                    target = rewritten_target
-                else:
-                    target.question = (
-                        f"다음 보기 중 참고자료에서 '{topic}'에 해당하는 것으로 "
-                        "직접 확인되는 것은?"
+                if not rewritten_valid:
+                    # 정형(단일정답)으로 불가능한 목록형 주제.
+                    # 억지 템플릿으로 때우지 않고 실패시켜, 상위에서 부정형으로 전환한다.
+                    raise ValueError(
+                        f"단일 정답 질문 설계 실패: {rewritten_reason or valid_reason}"
                     )
+                target = rewritten_target
+
+            # 질문에 정답 단어가 그대로 노출되면 재생성 (답이 뻔한 문제 방지)
+            question_key = _normalized_choice(target.question).replace(" ", "")
+            answer_key = _normalized_choice(target.correct_answer).replace(" ", "")
+            if answer_key and answer_key in question_key:
+                raise ValueError(
+                    f"질문에 정답('{target.correct_answer}')이 노출됨 -> 재생성"
+                )
             return target
         except (ValueError, ValidationError, json.JSONDecodeError) as error:
             failure = str(error)
@@ -647,6 +646,96 @@ def _quiz_result(
     }
 
 
+class NegativeDraft(BaseModel):
+    real_items: list[str] = Field(min_length=3)
+    fake_item: str = Field(min_length=1)
+    explanation: str = Field(min_length=1)
+    evidence: str = Field(min_length=1)
+    source_refs: list[int] = Field(min_length=1)
+
+
+NEGATIVE_PROMPT = """\
+너는 신입사원 교육용 객관식 '부정형' 퀴즈 설계자다.
+아래 참고자료만 사용하여 '{topic}'에 대한 부정형 문제를 설계하라.
+
+부정형 문제는 "다음 중 ~에 해당하지 않는 것은?" 형태다.
+- real_items: 참고자료에서 '{topic}'에 실제로 해당하는 서로 다른 항목 3개.
+- fake_item: '{topic}'과 같은 분야처럼 보이지만 참고자료에는 없는 그럴듯한 가짜 1개.
+- fake_item은 real_items와 길이·형식이 비슷해야 하고, 참고자료에서 정답으로 확인되면 안 된다.
+- 모두 한국어로만 작성하고 null·빈 문자열을 쓰지 마라.
+- source_refs에는 사용한 자료 번호만 정수로 넣어라.
+
+설명 없이 JSON 하나만 출력하라:
+{{"real_items":["항목1","항목2","항목3"],"fake_item":"가짜 항목",
+"explanation":"fake_item이 왜 해당하지 않는지 설명","evidence":"근거 문장","source_refs":[1]}}
+
+[주제]
+{topic}
+
+[참고자료]
+{context}
+"""
+
+
+def _generate_negative_multiple_choice(
+    generator,
+    topic: str,
+    context: str,
+    *,
+    retrieved_count: int,
+    max_attempts: int,
+) -> QuizDraft:
+    """정형(단일정답) 설계가 불가능한 목록형 주제를 '부정형'으로 만든다.
+    참고자료의 실제 항목 3개 + 자료 밖 가짜 1개 -> 정답은 가짜(해당 없음)."""
+    failure = ""
+    for _ in range(max_attempts):
+        prompt = NEGATIVE_PROMPT.format(topic=topic, context=context)
+        if failure:
+            prompt += f"\n\n이전 실패 이유:\n{failure}\n새 JSON 객체를 작성하라."
+        raw = _invoke(generator, [{"role": "user", "content": prompt}], do_sample=True)
+        try:
+            neg = NegativeDraft.model_validate(extract_json(raw))
+            _validate_source_refs(neg.source_refs, retrieved_count)
+
+            # 실제 항목 중복 제거
+            reals: list[str] = []
+            seen: set[str] = set()
+            for item in neg.real_items:
+                normalized = _normalized_choice(item)
+                if normalized and normalized not in seen:
+                    seen.add(normalized)
+                    reals.append(item.strip())
+            if len(reals) < 3:
+                failure = "참고자료의 실제 항목(real_items)이 3개 미만입니다."
+                continue
+
+            fake = neg.fake_item.strip()
+            if not fake or _normalized_choice(fake) in seen:
+                failure = "fake_item이 비었거나 실제 항목과 겹칩니다."
+                continue
+
+            reals = reals[:3]
+            position = sum(ord(character) for character in topic) % 4
+            choices = list(reals)
+            choices.insert(position, fake)   # 가짜(정답)를 결정적 위치에 삽입
+
+            draft = QuizDraft(
+                type="multiple_choice",
+                question=f"다음 중 '{topic}'에 해당하지 않는 것은?",
+                choices=choices,
+                answer=position + 1,
+                explanation=neg.explanation.strip(),
+                evidence=neg.evidence.strip(),
+                source_refs=neg.source_refs,
+            )
+            _validate_structure(draft, "multiple_choice")
+            return draft
+        except (ValueError, ValidationError, json.JSONDecodeError) as error:
+            failure = str(error)
+
+    raise RuntimeError(f"{max_attempts}회 시도 후 부정형 문제를 만들지 못했습니다: {failure}")
+
+
 def generate_quiz(
     generator,
     topic: str,
@@ -663,14 +752,24 @@ def generate_quiz(
 
     context = build_context(retrieved)
     if quiz_type == "multiple_choice":
-        draft = _generate_validated_multiple_choice(
-            generator,
-            topic,
-            context,
-            retrieved_count=len(retrieved),
-            max_attempts=max_attempts,
-            validate_choices=validate_choices,
-        )
+        try:
+            draft = _generate_validated_multiple_choice(
+                generator,
+                topic,
+                context,
+                retrieved_count=len(retrieved),
+                max_attempts=max_attempts,
+                validate_choices=validate_choices,
+            )
+        except RuntimeError:
+            # 정형(단일정답)으로 안 되는 목록형 주제 -> 부정형("~아닌 것은?")으로 전환
+            draft = _generate_negative_multiple_choice(
+                generator,
+                topic,
+                context,
+                retrieved_count=len(retrieved),
+                max_attempts=max_attempts,
+            )
         return _quiz_result(
             draft,
             retrieved,
