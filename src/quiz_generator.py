@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
@@ -25,6 +26,9 @@ class QuizDraft(BaseModel):
 SYSTEM_PROMPT = """\
 너는 신입사원 교육용 퀴즈 출제자다.
 아래 [참고자료]에 명시된 내용만 사용하고 외부 지식을 추가하지 마라.
+
+모든 출력(question, choices, explanation, evidence)은 반드시 한국어로만 작성하라.
+한자, 중국어, 일본어, 불필요한 영어 문장을 절대 쓰지 마라. 물음표도 한국어(?)만 사용하라.
 
 객관식 생성 규칙:
 - 보기는 정확히 4개다.
@@ -130,6 +134,11 @@ def build_context(retrieved: list[dict[str, Any]]) -> str:
     )
 
 
+def _has_chinese(text: str) -> bool:
+    """한자가 3개 이상 연속되면 중국어 문장으로 판단(한국 한자어 1~2자는 통과)."""
+    return bool(re.search(r"[一-鿿]{3,}", text))
+
+
 def _validate_structure(draft: QuizDraft, requested_type: str) -> None:
     if draft.type != requested_type:
         raise ValueError(f"요청 유형은 {requested_type}, 생성 유형은 {draft.type}입니다.")
@@ -207,6 +216,9 @@ def generate_quiz(
                 valid, reason = _single_answer_check(generator, context, draft)
                 if not valid:
                     raise ValueError(f"복수정답/모호성 검증 실패: {reason}")
+
+            if _has_chinese(draft.question + " " + " ".join(draft.choices)):
+                raise ValueError("question/choices에 중국어(한자) 문장이 섞임 → 재생성")
 
             sources = []
             for ref in draft.source_refs:
