@@ -1,9 +1,13 @@
+# Python 3.11.x required. requirements.txt cannot install Python itself.
 python-pptx>=0.6.23
 chromadb>=1.5.0
-scikit-learn>=1.5.0        # LocalTestEmbedder(로컬 검증용)에 필요
-
-# 아래는 인터넷 되는 환경(다른 AI/로컬 PC)에서만 필요 - 이 샌드박스에서는 미설치
-sentence-transformers>=3.0.0   # ProductionEmbedder (intfloat/multilingual-e5-small)
-transformers>=4.44.0            # generator.py (Qwen2.5-1.5B-Instruct)
-torch>=2.3.0
-bert-score>=0.3.13               # evaluator.bert_score_eval
+scikit-learn>=1.5.0
+sentence-transformers>=3.0.0
+transformers>=4.44.0
+bert-score>=0.3.13
+# NVIDIA GPU build; keep this before installing the requirements in the venv.
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.11.0+cu128
+accelerate>=0.33.0
+pydantic>=2.8.0
+python-dotenv>=1.0.0
