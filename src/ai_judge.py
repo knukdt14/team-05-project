@@ -82,8 +82,8 @@ def judge_all(generator, quizzes: list[dict]) -> list[dict[str, Any]]:
 if __name__ == "__main__":
     import sys
 
-    quizzes_path = sys.argv[1] if len(sys.argv) > 1 else r"C:\team-05-project\src\generated_quizzes.json"
-    output_path = "results/ai_judgments.json"
+    quizzes_path = sys.argv[1] if len(sys.argv) > 1 else r"..\results\generated_quizzes.json"
+    output_path = "../results/ai_judgments.json"
 
     with open(quizzes_path, encoding="utf-8") as f:
         quizzes = json.load(f)

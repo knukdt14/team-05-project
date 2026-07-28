@@ -121,11 +121,11 @@ def build_checklist(quizzes: list[dict], output_path: str | Path, rater_name: st
 if __name__ == "__main__":
     import sys
 
-    quizzes_path = sys.argv[1] if len(sys.argv) > 1 else r"C:\team-05-project\src\generated_quizzes.json"
+    quizzes_path = sys.argv[1] if len(sys.argv) > 1 else r"..\results\generated_quizzes.json"
     quizzes = load_quizzes(quizzes_path)
     print(f"퀴즈 {len(quizzes)}개 로딩됨")
 
     for rater in ["rater1", "rater2", "rater3"]:
-        output = f"results/checklist_{rater}.xlsx"
+        output = f"../results/checklist_{rater}.xlsx"
         build_checklist(quizzes, output, rater_name=rater)
         print(f"생성됨: {output}")
