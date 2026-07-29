@@ -11,13 +11,15 @@ results/generated_quizzes.json 을 읽어, 실제로 풀어보는 인터랙티�
 """
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 from settings import PROJECT_ROOT
 
-DEFAULT_INPUT = PROJECT_ROOT / "results" / "generated_quizzes.json"
-DEFAULT_OUTPUT = PROJECT_ROOT / "results" / "quiz_ui.html"
+DEFAULT_INPUT = PROJECT_ROOT / "results_final" / "generated_quizzes_layout_aware_upstage.json"
+DEFAULT_OUTPUT = PROJECT_ROOT / "results_final" / "quiz_ui_slide_aware.html"
 
 
 HTML_TEMPLATE = """<!doctype html>
@@ -152,9 +154,31 @@ render();
 """
 
 
-def build_ui(input_path=DEFAULT_INPUT, output_path=DEFAULT_OUTPUT) -> Path:
-    quizzes = json.loads(Path(input_path).read_text(encoding="utf-8"))
-    data = json.dumps(quizzes, ensure_ascii=False)
+def load_quizzes(input_path: str | Path) -> list[dict[str, Any]]:
+    path = Path(input_path)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"퀴즈 JSON이 없습니다: {path}\n"
+            "먼저 python src\\main.py를 실행하거나 --input으로 파일을 지정하세요."
+        )
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(payload, dict):
+        payload = payload.get("quizzes")
+    if not isinstance(payload, list):
+        raise ValueError(
+            "퀴즈 JSON은 배열이거나 quizzes 배열을 가진 객체여야 합니다."
+        )
+    if not all(isinstance(quiz, dict) for quiz in payload):
+        raise ValueError("quizzes 배열의 모든 항목은 JSON 객체여야 합니다.")
+    return payload
+
+
+def build_ui(
+    input_path: str | Path = DEFAULT_INPUT,
+    output_path: str | Path = DEFAULT_OUTPUT,
+) -> Path:
+    quizzes = load_quizzes(input_path)
+    data = json.dumps(quizzes, ensure_ascii=False).replace("</", "<\\/")
     html = HTML_TEMPLATE.replace("__QUIZ_DATA__", data)
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -162,7 +186,18 @@ def build_ui(input_path=DEFAULT_INPUT, output_path=DEFAULT_OUTPUT) -> Path:
     return out
 
 
-if __name__ == "__main__":
-    path = build_ui()
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(
+        description="생성된 퀴즈 JSON을 응시용 HTML로 변환합니다."
+    )
+    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    args = parser.parse_args(argv)
+
+    path = build_ui(args.input, args.output)
     print(f"퀴즈 UI 생성: {path}")
     print("브라우저로 이 파일을 열면 퀴즈를 풀 수 있습니다.")
+
+
+if __name__ == "__main__":
+    main()

@@ -11,12 +11,14 @@ SUPPORTED_STRATEGIES = (
     "sentence_pack",
     "slide_aware",
     "title_body",
+    "layout_aware",
 )
 CHUNKING_CONFIGS = {
     "recursive": {"chunk_size": 150, "overlap": 30},
     "sentence_pack": {"chunk_size": 300, "overlap": 1},
     "slide_aware": {"chunk_size": 300, "overlap": 1},
     "title_body": {"chunk_size": 300, "overlap": 1},
+    "layout_aware": {"chunk_size": 400, "overlap": 1},
 }
 SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?。！？])\s+")
 
@@ -89,6 +91,31 @@ def _format(title: str, body: str) -> str:
     )
 
 
+def _layout_units(document: dict[str, Any]) -> list[str]:
+    """Create semantic units while retaining PowerPoint table relationships."""
+    units: list[str] = []
+    for group in document.get("body_groups") or []:
+        lines = [
+            str(line).strip()
+            for line in group.get("lines") or _lines(str(group.get("text", "")))
+            if str(line).strip()
+        ]
+        if not lines:
+            continue
+
+        if group.get("type") == "table" and len(lines) > 1:
+            header = lines[0]
+            units.extend(
+                f"[표 헤더] {header}\n[표 행] {row}"
+                for row in lines[1:]
+            )
+            continue
+
+        for line in lines:
+            units.extend(sentence_units(line))
+    return units
+
+
 def _pieces_for_document(
     document: dict[str, Any],
     strategy: str,
@@ -105,6 +132,17 @@ def _pieces_for_document(
         title, body = _title_body(text)
     else:
         title = str(document.get("title", "")).strip()
+        if strategy == "layout_aware":
+            units = _layout_units(document)
+            if not units:
+                _, fallback_body = _title_body(text)
+                units = sentence_units(fallback_body)
+            bodies = _pack(units, size, overlap)
+            return [
+                {"text": _format(title, value), "title": title}
+                for value in bodies
+            ]
+
         groups = document.get("body_groups") or []
         body = "\n".join(
             str(group.get("text", "")).strip()
@@ -137,6 +175,12 @@ def chunk_documents(
     config = CHUNKING_CONFIGS[strategy]
     size = config["chunk_size"] if chunk_size is None else chunk_size
     overlap_value = config["overlap"] if overlap is None else overlap
+    if size <= 0:
+        raise ValueError("chunk_size는 1 이상이어야 합니다.")
+    if overlap_value < 0:
+        raise ValueError("overlap은 0 이상이어야 합니다.")
+    if strategy == "recursive" and overlap_value >= size:
+        raise ValueError("recursive의 overlap은 chunk_size보다 작아야 합니다.")
 
     chunks = []
     for document in documents:
