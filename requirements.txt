@@ -1,5 +1,6 @@
 # Python 3.11.x required. requirements.txt cannot install Python itself.
 python-pptx>=0.6.23
+python-docx>=1.2.0
 openpyxl>=3.1.5
 chromadb>=1.5.0
 numpy>=1.26.0
