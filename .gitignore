@@ -222,3 +222,4 @@ __marimo__/
 data/*.pptx
 results/chroma/
 results/*.tmp
+results_final/rank.csv 
