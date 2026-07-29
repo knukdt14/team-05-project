@@ -1,0 +1,2123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>청킹 방식별 퀴즈 비교</title>
+  <style>
+    :root { --bg:#f4f7fb; --card:#fff; --ink:#172033; --muted:#667085;
+            --line:#d8e0ec; --brand:#2457d6; --soft:#e9efff;
+            --ok:#eaf8ef; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink);
+      font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif; line-height:1.55; }
+    main { width:min(1180px,calc(100% - 32px)); margin:32px auto 70px; }
+    h1 { margin:0 0 6px; font-size:clamp(1.5rem,3vw,2.2rem); }
+    h2 { margin:0 0 14px; font-size:1.18rem; }
+    h3 { margin:12px 0; font-size:1.08rem; }
+    h4 { margin-bottom:7px; }
+    .muted { color:var(--muted); }
+    .header { margin-bottom:24px; }
+    .tabs { display:flex; gap:8px; flex-wrap:wrap; margin:20px 0; }
+    .tab { border:1px solid var(--line); background:var(--card); color:var(--ink);
+      border-radius:999px; padding:9px 15px; text-decoration:none; }
+    .tab:hover, .tab.active { background:var(--brand); border-color:var(--brand); color:#fff; }
+    .panel-section { display:none; }
+    .panel-section.active { display:block; }
+    .panel { background:var(--card); border:1px solid var(--line); border-radius:16px;
+      padding:20px; margin-bottom:20px; box-shadow:0 5px 18px #1720330c; }
+    .metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
+    .metric { background:var(--soft); border-radius:12px; padding:12px 14px; }
+    .metric b { display:block; font-size:1.3rem; color:var(--brand); }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; min-width:650px; }
+    th,td { border-bottom:1px solid var(--line); padding:10px; text-align:left; vertical-align:top; }
+    th { color:var(--muted); font-size:.88rem; }
+    .ok { color:#137333; font-weight:700; }
+    .failed { color:#b54708; font-weight:700; }
+    .topic-list { display:grid; gap:28px; }
+    .topic-group { background:var(--soft); border-radius:14px; padding:16px; }
+    .topic-group > h3 { margin:0 0 14px; color:var(--brand); }
+    .quiz-list { display:grid; gap:16px; }
+    .quiz-card { background:var(--card); border:1px solid var(--line); border-radius:13px; padding:18px; }
+    .used-chunks { margin-top:16px; padding-top:12px; border-top:1px solid var(--line); }
+    .used-chunk { background:#f8fafc; border:1px solid var(--line); border-radius:9px; margin:9px 0; padding:11px 12px; }
+    .meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; color:var(--muted); font-size:.88rem; }
+    .badge { color:var(--brand); background:var(--soft); border-radius:999px; padding:3px 9px; font-weight:700; }
+    code { margin-left:auto; }
+    ol { padding-left:28px; }
+    details { margin-top:14px; border-top:1px solid var(--line); padding-top:12px; }
+    summary { cursor:pointer; color:var(--brand); font-weight:700; }
+    .answer { background:var(--ok); padding:10px 12px; border-radius:9px; margin-top:12px; }
+    .evidence { white-space:pre-wrap; }
+    .chunk { background:#f8fafc; border:1px solid var(--line); border-radius:9px; margin:9px 0; padding:11px 12px; }
+    .chunk-meta { color:var(--muted); font-size:.83rem; margin-bottom:5px; }
+    pre { white-space:pre-wrap; word-break:break-word; margin:0; font:inherit; font-size:.92rem; }
+    @media (max-width:600px) { main { width:calc(100% - 20px); margin-top:20px; } .panel,.quiz-card { padding:15px; } code { width:100%; margin:0; } }
+    @media print { body { background:#fff; } .tabs { display:none; } .panel,.quiz-card { box-shadow:none; break-inside:avoid; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="header">
+      <h1>청킹 방식별 퀴즈 비교</h1>
+      <p class="muted">입력 파일: C:\Users\KDT013\14_AI_Data\_KNUKDT\knu-kdt2\team-05-project\results\chunking_comparison\all_chunking_quizzes.json</p>
+      <nav class="tabs">
+        <a class="tab active" href="#overview" onclick="showPanel('overview'); return false;">전체 비교</a>
+        <a class="tab" href="#experiment-0" onclick="showPanel('experiment-0'); return false;">recursive (size=150, overlap=30)</a><a class="tab" href="#experiment-1" onclick="showPanel('experiment-1'); return false;">sentence_pack (size=300, overlap=1)</a><a class="tab" href="#experiment-2" onclick="showPanel('experiment-2'); return false;">slide_aware (size=300, overlap=1)</a><a class="tab" href="#experiment-3" onclick="showPanel('experiment-3'); return false;">title_body (size=300, overlap=1)</a><a class="tab" href="#experiment-4" onclick="showPanel('experiment-4'); return false;">layout_aware (size=400, overlap=1)</a>
+      </nav>
+    </header>
+    
+    <section class="panel-section active" id="overview">
+      <div class="panel">
+        <h2>전체 비교 요약</h2>
+        <div class="metrics">
+          <div class="metric"><b>10</b>recursive (size=150, overlap=30)<br><span class="muted">실패 0개 · R@K 0.933 · P@K 0.240 · MRR 0.950</span></div><div class="metric"><b>10</b>sentence_pack (size=300, overlap=1)<br><span class="muted">실패 0개 · R@K 0.917 · P@K 0.240 · MRR 1.000</span></div><div class="metric"><b>10</b>slide_aware (size=300, overlap=1)<br><span class="muted">실패 0개 · R@K 0.967 · P@K 0.260 · MRR 1.000</span></div><div class="metric"><b>9</b>title_body (size=300, overlap=1)<br><span class="muted">실패 1개 · R@K 0.967 · P@K 0.260 · MRR 1.000</span></div><div class="metric"><b>10</b>layout_aware (size=400, overlap=1)<br><span class="muted">실패 0개 · R@K 0.967 · P@K 0.260 · MRR 1.000</span></div>
+        </div>
+      </div>
+      <div class="panel table-wrap">
+        <h2>동일 주제 생성 여부</h2>
+        <table><thead><tr><th>주제</th><th>recursive (size=150, overlap=30)</th><th>sentence_pack (size=300, overlap=1)</th><th>slide_aware (size=300, overlap=1)</th><th>title_body (size=300, overlap=1)</th><th>layout_aware (size=400, overlap=1)</th></tr></thead>
+        <tbody><tr><td>프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</td><td class="ok">생성됨<br><span class="muted">recursive-q01</span></td><td class="ok">생성됨<br><span class="muted">sentence_pack-q01</span></td><td class="ok">생성됨<br><span class="muted">slide_aware-q01</span></td><td class="ok">생성됨<br><span class="muted">title_body-q01</span></td><td class="ok">생성됨<br><span class="muted">layout_aware-q01</span></td></tr><tr><td>프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</td><td class="ok">생성됨<br><span class="muted">recursive-q02</span></td><td class="ok">생성됨<br><span class="muted">sentence_pack-q02</span></td><td class="ok">생성됨<br><span class="muted">slide_aware-q02</span></td><td class="ok">생성됨<br><span class="muted">title_body-q02</span></td><td class="ok">생성됨<br><span class="muted">layout_aware-q02</span></td></tr><tr><td>다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</td><td class="ok">생성됨<br><span class="muted">recursive-q03</span></td><td class="ok">생성됨<br><span class="muted">sentence_pack-q03</span></td><td class="ok">생성됨<br><span class="muted">slide_aware-q03</span></td><td class="ok">생성됨<br><span class="muted">title_body-q03</span></td><td class="ok">생성됨<br><span class="muted">layout_aware-q03</span></td></tr><tr><td>피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</td><td class="ok">생성됨<br><span class="muted">recursive-q04</span></td><td class="ok">생성됨<br><span class="muted">sentence_pack-q04</span></td><td class="ok">생성됨<br><span class="muted">slide_aware-q04</span></td><td class="ok">생성됨<br><span class="muted">title_body-q04</span></td><td class="ok">생성됨<br><span class="muted">layout_aware-q04</span></td></tr><tr><td>차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?</td><td class="ok">생성됨<br><span class="muted">recursive-q05</span></td><td class="ok">생성됨<br><span class="muted">sentence_pack-q05</span></td><td class="ok">생성됨<br><span class="muted">slide_aware-q05</span></td><td class="failed">실패/없음</td><td class="ok">생성됨<br><span class="muted">layout_aware-q05</span></td></tr><tr><td>스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</td><td class="ok">생성됨<br><span class="muted">recursive-q06</span></td><td class="ok">생성됨<br><span class="muted">sentence_pack-q06</span></td><td class="ok">생성됨<br><span class="muted">slide_aware-q06</span></td><td class="ok">생성됨<br><span class="muted">title_body-q06</span></td><td class="ok">생성됨<br><span class="muted">layout_aware-q06</span></td></tr><tr><td>ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</td><td class="ok">생성됨<br><span class="muted">recursive-q07</span></td><td class="ok">생성됨<br><span class="muted">sentence_pack-q07</span></td><td class="ok">생성됨<br><span class="muted">slide_aware-q07</span></td><td class="ok">생성됨<br><span class="muted">title_body-q07</span></td><td class="ok">생성됨<br><span class="muted">layout_aware-q07</span></td></tr><tr><td>다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</td><td class="ok">생성됨<br><span class="muted">recursive-q08</span></td><td class="ok">생성됨<br><span class="muted">sentence_pack-q08</span></td><td class="ok">생성됨<br><span class="muted">slide_aware-q08</span></td><td class="ok">생성됨<br><span class="muted">title_body-q08</span></td><td class="ok">생성됨<br><span class="muted">layout_aware-q08</span></td></tr><tr><td>CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</td><td class="ok">생성됨<br><span class="muted">recursive-q09</span></td><td class="ok">생성됨<br><span class="muted">sentence_pack-q09</span></td><td class="ok">생성됨<br><span class="muted">slide_aware-q09</span></td><td class="ok">생성됨<br><span class="muted">title_body-q09</span></td><td class="ok">생성됨<br><span class="muted">layout_aware-q09</span></td></tr><tr><td>다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</td><td class="ok">생성됨<br><span class="muted">recursive-q10</span></td><td class="ok">생성됨<br><span class="muted">sentence_pack-q10</span></td><td class="ok">생성됨<br><span class="muted">slide_aware-q10</span></td><td class="ok">생성됨<br><span class="muted">title_body-q10</span></td><td class="ok">생성됨<br><span class="muted">layout_aware-q10</span></td></tr></tbody></table>
+      </div>
+    </section>
+    
+    <section class="panel-section" id="experiment-0">
+      <div class="panel">
+        <h2>recursive (size=150, overlap=30)</h2>
+        <p class="muted">퀴즈 10개 · 실패 0개 · Recall@K 0.933 · Precision@K 0.240 · MRR 0.950</p>
+      </div>
+      <div class="topic-list"><section class="topic-group"><h3>주제: 프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 1</span>
+        <span>프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</span>
+        <code>recursive-q01</code></div>
+      <h3>프로젝션 용접에서 서로 다른 재질을 접합할 때 열변형과 잔류응력보다 더 큰 영향을 미치는 물리적 문제는 무엇인가?</h3>
+      <ol><li>전극 정렬 불균형</li><li>열팽창 계수 차이</li><li>가압력 과도 증가</li><li>전류 밀도 편차</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 열팽창 계수 차이</div>
+        <p><b>해설</b><br>이종 재질 접합 시 열팽창 계수 차이로 인해 열응력이 집중되며, 이는 용접부의 균열이나 변형을 유발하는 주된 물리적 메커니즘이다. 다른 답변들은 열팽창 계수 차이로 인한 2차적 결과이거나 간접적 영향이다.</p>
+        <p class="evidence"><b>근거</b><br>이종 재질의 접합이 곤란 (자료 1) / 열변형이 잔류응력, 산화가 적음 (자료 1)</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p099-c03 · 슬라이드 99 · distance=0.829716682434082</div><pre>의 집중성이 좋고 열손실 적음
+가압 효과로 조직이 치밀 작업자의 숙련이 필요 없음
+열변형이 잔류응력, 산화가 적음
+단점 | 적당한 비파괴 검사가 어려움
+설비 복잡하고 고가
+용접부의 위치,형상 등 영향 큼
+이종 재질의 접합이 곤란
+용접기의 용량에 비해 용접능력한정되며 재질,판두께 등 재료 영향이 큼
+1차 전원
+너겟</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 2</span>
+        <span>프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</span>
+        <code>recursive-q02</code></div>
+      <h3>프레스의 동력원 분류에서 유체를 이용해 슬라이드를 작동시키는 방식은 어떤 구조인가?</h3>
+      <ol><li>공압프레스</li><li>유압프레스</li><li>전자식 프레스</li><li>마그네틱 프레스</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 유압프레스</div>
+        <p><b>해설</b><br>유체를 이용해 슬라이드를 작동시키는 방식은 유압프레스에 해당합니다. 기계식 프레스는 크랭크 등의 회전 운동을 통해 슬라이드를 작동시키는 방식으로, 동력원과 작동 원리가 근본적으로 다릅니다. 자료 1에서 &#x27;유압프레스에 적합&#x27;과 &#x27;유체를 압력을 이용하여 슬라이드를 작동&#x27;이라는 명시적 근거가 확인됩니다.</p>
+        <p class="evidence"><b>근거</b><br>유압프레스에 적합 유체을 압력을 이용하여 슬라이드를 작동</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p016-c02 · 슬라이드 16 · distance=0.690220832824707</div><pre>레스
+소형(200T 이하)에 적합
+앞 벌어짐 발생 우려 중대형(300T 이상)에 적합
+안정적인 구조
+특수목적(소형)
+유압프레스에 적합
+유체을 압력을 이용하여 슬라이드를 작동
+기계력을 이용하여 크랭크 등을 회전시켜 슬라이드를 작동</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 3</span>
+        <span>다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</span>
+        <code>recursive-q03</code></div>
+      <h3>다음 중 생산관리에서 설비의 성능, 시간, 품질 측면의 효율성을 종합적으로 평가하는 척도와 직접적인 관련이 없는 항목은 무엇인가?</h3>
+      <ol><li>풀캐파</li><li>작업자 교대 근무 효율성</li><li>에너지 소비 대비 생산량 비율</li><li>설비 가동 대기시간 비율</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 풀캐파</div>
+        <p><b>해설</b><br>풀캐파는 생산능력(UPH, 가동율 등)과 관련된 개념이지만, 종합효율 평가 척도의 3대 요소(성능·시간·품질)를 직접 평가하는 항목이 아니다. 반면 다른 항목들은 설비 효율 관리 또는 종합효율 계산과 직접 연관된다.</p>
+        <p class="evidence"><b>근거</b><br>설비를 성능, 시간, 품질면으로 얼마나 효율적으로 관리하였는가를 종합적으로 평가하는 척도</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p057-c01 · 슬라이드 57 · distance=0.9949169158935547</div><pre>생산본부-생산관리팀
+2-4 생산관리 세부업무
+종합효율 용어
+종합효율
+설비를 성능, 시간, 품질면으로 얼마나 효율적으로 관리하였는가를 종합적으로 평가하는 척도
+소요된 모든 공수에 대한 정상적으로 작업된 공수의 비율
+기호 | 용어 | 의미</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p059-c01 · 슬라이드 59 · distance=1.136993169784546</div><pre>생산본부-생산관리팀
+2-4 생산관리 세부업무
+설비 Loss 분석 (6대 Loss)
+종합효율 관리 적용대상
+Bottle Neck 공정:                           공정 중 C/T가 가장 느려 병목현상을 유발하는 공정
+설비수가 많은 병렬공정</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p108-c02 · 슬라이드 108 · distance=1.1688182353973389</div><pre>및 점검결과 입력
+新ISIR 시스템 구매항목 제출 점검 - 품질확보계획, 제조공정승인, 공정감사
+공정감사 참여 및 점검결과 입력
+14
+풀캐파
+연속생산 공정점검
+생산능력 (UPH, 가동율 합격율, Cpk)
+공정(특별특성,F/PROOF,자동검사)
+과거차, 작업자, 외주품, 파렛트 점검
+생산능력 (UPH, 가동율 합격율)</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 4</span>
+        <span>피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</span>
+        <code>recursive-q04</code></div>
+      <h3>다음 중 &#x27;피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>프레스 쿠션압력 설정값</li><li>피딩 롤 압력 실측지</li><li>쿳션압력 조정</li><li>피딩 롤 표면 압력</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 프레스 쿠션압력 설정값</div>
+        <p><b>해설</b><br>&#x27;프레스 쿠션압력 설정값&#x27;은 롤 자체의 물리적 조건이 아닌 프레스 기계의 설정 파라미터이며, 참고자료에서 롤 점검 항목으로 직접 언급되지 않습니다.</p>
+        <p class="evidence"><b>근거</b><br>[피딩 롤 압력 및 실측지 점검] [쿳션압력의 조정] [피딩 롤 표면 압력 부족시 슬립]</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p096-c04 · 슬라이드 96 · distance=0.4808289706707001</div><pre>롤]
+[ 소재 롤 마크 발생]
+[ 소재 스크래치 발생] [ 피딩 롤 거칠기 상태 점검]
+[ 피딩 롤 압력 및 실측지 점검]</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p032-c02 · 슬라이드 32 · distance=0.623553991317749</div><pre>로 인한 외관 품질 저하
+현상 및 문제점
+[피딩 공정] [금형 외관 품질 저하]
+피딩 롤 표면 압력 부족시 슬립
+→롤 마크 발생
+(외관불량)
+[선자국]
+[긁힘]
+금형 세척효과 미흡 및 외관품질 저하
+[1.
+피딩 롤 상태 점검]
+개선 방안
+[1.
+RFID를 통한 세척주기 파악]
+[1.
+소재 검사성적서]
+[2.</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p098-c04 · 슬라이드 98 · distance=0.8276838064193726</div><pre>| ·육안검사
+·가능HOLE의 경우
+상대부품 만족
+확인 점검항목 | ▶쿳션압력의 조정
+→소재 LOT간 산포 반영
+▶게이지
+▶블랭크 홀더(B/H)
+비드 마모 | ▶금형내 이물질 제거
+(작업전,후)
+▶쿳션압력
+▶원자재 규격
+▶프레스 정도 관리
+: 1회/3개월 | ▶원자재/금형내
+이물질(작업전,후)
+▶코팅/도금부 마모</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 5</span>
+        <span>차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?</span>
+        <code>recursive-q05</code></div>
+      <h3>차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능 개선, 뒷좌석 승객 공간 및 화물 적재 공간 확보, RR SEAT 및 RR SEAT BELT 체결 기능을 동시에 수행하는 부품은 무엇인가?</h3>
+      <ol><li>PNL ASSY-RR FLR COMPL</li><li>CTR FLR BRACKET</li><li>RR WHEEL GUARD</li><li>DASH PNL SUPPOR</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — PNL ASSY-RR FLR COMPL</div>
+        <p><b>해설</b><br>PNL ASSY-RR FLR COMPL은 차체 CTR FLR 및 BACK PLR과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능 개선, 뒷좌석 승객 공간 및 화물 적재 공간 확보, RR SEAT 및 RR SEAT BELT 체결 기능을 모두 수행하는 부품입니다. &#x27;COMPL&#x27;은 이 부품의 약칭으로 사용될 수 있으나, 정확한 명칭은 &#x27;PNL ASSY-RR FLR COMPL&#x27;입니다.</p>
+        <p class="evidence"><b>근거</b><br>7-2) PNL ASSY-RR FLR COMPL 기능 - 차체 CTR FLR, BACK PNL과 체결되어 FLOOR 후방부를 구성하며 차체의 비틀림, 강성 및 후방 충돌 성능을 만족 - 뒷자석 승객의 및 화물 적재 공간 확보 - RR SEAT 및 RR SEAT BELT 체결</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p139-c02 · 슬라이드 139 · distance=0.3045515716075897</div><pre>7-2)  PNL ASSY-RR FLR COMPL 기능 - 차체 CTR FLR, BACK PNL과 체결되어 FLOOR 후방부를 구성하며 차체의 비틀림, 강성    (정강성/동강성/판넬/입력점) 및 후방 충돌 성능을 만족
+- 뒷자석 승객의 및 화물 적재 공간 확보
+- RR SEAT 및 RR SEAT BELT 체결</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 6</span>
+        <span>스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</span>
+        <code>recursive-q06</code></div>
+      <h3>다음 중 &#x27;스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>Virtuous cycle(이상 징후 포착 → 데이터 축적 → IoT 기반 품질관리 자동화 → 설비관리 → 생산 시스템 개선)</li><li>Big Data 분석을 통한 이상 신호 감지 및 예방 보전</li><li>시간당 제품생산 수량(UPH) 및 C/T(Cycle Time) 단축을 통한 인당/원당 생산성 향상</li><li>IoT 기반 품질관리 자동화를 통한 신속/정밀한 검사 및 제조 현장 품질 일원화</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 3번 — 시간당 제품생산 수량(UPH) 및 C/T(Cycle Time) 단축을 통한 인당/원당 생산성 향상</div>
+        <p><b>해설</b><br>fake_item은 생산 효율성 개선을 위한 개별 공정 최적화 기술이지만, Big Data-IoT-설비관리의 순환적 메커니즘과 직접적인 연관성이 없습니다. 해당 내용은 생산 속도/인력 관리 중심의 접근으로, 이상 차단 및 데이터 기반 예측 관리와는 차이가 있습니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 1의 &#x27;Virtuous cycle&#x27; 및 &#x27;Big Data의 활용을 통한 이상 징후 사전 차단, 관리&#x27; 설명, 자료 3의 &#x27;자동검사를 통한 전수검사 가능&#x27; 등 순환적 메커니즘과 직접 연결된 기술만 real_items에 포함되었습니다. fake_item은 자료 4의 C/T 단축 등 생산 속도 관련 내용으로, 이상 차단 및 데이터 기반 관리와는 무관합니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p150-c02 · 슬라이드 150 · distance=0.4983349144458771</div><pre>관리
+이상 발생
+사전 차단
+Big Data를 분석 하여 이상 신호 감지 및 생산 최적화
+예방 보전
+Big Data의 활용을 통한
+이상 징후 사전 차단, 관리
+예방 보전
+Virtuous
+cycle
+이상 징후 포착
+데이터
+축척
+IoT
+품질관리
+자동화를 통해 신속/정밀한 검사를 시행
+제조 현장의 품질 일원화
+설비관리</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p156-c02 · 슬라이드 156 · distance=0.8751527667045593</div><pre>이력에 대한
+실시간 원격 모니터링 관리가 가능한 시스템 차체 부품 조립 시, 각 공정 별 용접, 비전검사 및 제품 상태정보를 LOT별로
+수집 가능한 품질이력관리시스템
+효과
+효과
+ㆍ신속한 생산 데이터 공유를 통한 생산성 향상 효과
+ㆍ빅데이터 클라우드를 통한 관리 기능 향상 효과</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p152-c03 · 슬라이드 152 · distance=0.9115012884140015</div><pre>향상
+ㆍ네트워크 통신을 통한 공정 별 데이터 이력 관리 ㆍ검사를 통해 축적한 데이터 통합관리 및 전산화 가능
+효과
+효과
+ㆍ제품 품질 수준 안정화 및 신뢰성 확보
+ㆍ자동검사를 통한 전수검사 가능
+누락
+크랙
+트림라인
+홀
+101년을 생각하는 자동차 부품 전문기업</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p055-c02 · 슬라이드 55 · distance=0.9392520785331726</div><pre>시간당 제품생산 수량
+가동률 향상
+배치인력 최적화 C/T 단축
+Loss Time 감축
+(설비 정지 등)
+품질문제 개선
+공정 자동화
+작업 동선 최적화
+C/T(Cycle Time):           로봇(설비)이 한 동작을 반복    하는 주기
+공정개선을 통해 C/T를 단축하여 UPH 개선
+인당/원당 생산성
+인당 생산성</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p006-c01 · 슬라이드 6 · distance=0.9562551975250244</div><pre>WWW.WAMC.CO.KR
+006
+신기술 보유현황
+스마트 팩토리 기술
+공장통합관리시스템
+글로벌 네트워크 관리
+설비관리시스템
+품질관리시스템
+안전관리시스템
+물류관리시스템
+용접설비자동진단시스템
+용접팁연마분석장치
+타각문자/바코드인식시스템</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 7</span>
+        <span>ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</span>
+        <code>recursive-q07</code></div>
+      <h3>다음 중 &#x27;ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>POP시스템</li><li>통합 관제시스템</li><li>생산 이력 관리시스템</li><li>지식관리시스템(EKP)</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 4번 — 지식관리시스템(EKP)</div>
+        <p><b>해설</b><br>지식관리시스템(EKP)은 ERP 기반 실시간 작업지시 시스템과 무관한 사내 커뮤니케이션 및 문서관리 도구로, 참고자료에서 작업지시 연동 시스템으로 언급되지 않음</p>
+        <p class="evidence"><b>근거</b><br>자료3 슬라이드73에서 EKP는 전자결재·지식공유 기능으로 설명되어 있으며, 자료1·2·4에서 POP시스템·통합관제시스템·생산이력관리시스템이 작업지시 연동 시스템으로 명시됨</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p069-c03 · 슬라이드 69 · distance=0.7150029540061951</div><pre>시스템의 주요 기능]
+[본사에서 운용중인 POP시스템] [생산정보 실시간 확인]
+[ERP를 통한 작업지시]</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p156-c01 · 슬라이드 156 · distance=0.8551998138427734</div><pre>기술연구소- 비전연구팀
+관련시스템(6)
+통합관리시스템
+통합 관제시스템
+LOT기반 품질이력관리시스템
+개
+요
+개
+요
+제품의 소재입고, 생산, 품질검사, 출고, 납품까지의 모든 이력에 대한
+실시간 원격 모니터링 관리가 가능한 시스템</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p072-c01 · 슬라이드 72 · distance=0.8988435864448547</div><pre>생산본부-생산관리팀
+2-4 생산관리 세부업무
+ERP(Enterprise Resource Planning): 전사적 자원관리
+사내 통합 데이터베이스를 구축하여 회사의 모든 자원을 효율적으로 관리
+코일 커팅 여부
+코일 Cutting
+코일 수불
+시트 생산
+재공품 생산</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p150-c03 · 슬라이드 150 · distance=0.9361042976379395</div><pre>/정밀한 검사를 시행
+제조 현장의 품질 일원화
+설비관리 사람을 넘어선 정밀도/스피드로 변화를 센싱하고 데이터를 축척
+공정
+데이터
+수집
+물류 관리
+차량 위치 정보와 이동 시간
+예측으로 효율적인 배차 관리
+생산 이력 관리
+제품의 모든 생산 이력을 원격으로 실시간 모니터링 관리
+안전관리
+원격 모니터링으로 현장 통제와</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p073-c01 · 슬라이드 73 · distance=0.9381210803985596</div><pre>생산본부-생산관리팀
+2-4 생산관리 세부업무
+전자결재
+게시판
+전자우편, 사내통신
+지식등록, 승인, 평가
+지식수집, 공유
+지식전문가, Q&amp;A
+ekp.wamc.co.kr
+전자결재
+지식관리
+EKP(Enterprise Knowledge Portal): 기업지식포털</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 8</span>
+        <span>다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</span>
+        <code>recursive-q08</code></div>
+      <h3>다음 중 &#x27;ESG 사회(Social) 이슈&#x27;와 직접적으로 연관되지 않은 법령은 무엇인가?</h3>
+      <ol><li>유해화학물질 관리법</li><li>유가증권시장 공시규정</li><li>산업기술 유출방지 및 보호에 관한 법률</li><li>소비자보호법</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 유가증권시장 공시규정</div>
+        <p><b>해설</b><br>유가증권시장 공시규정은 거버넌스(G) 영역의 주주권 보호와 관련된 법령이며, 사회(S) 이슈와는 직접적인 연관성이 없습니다. 반면 other_valid_answers에 포함된 법령들은 환경(E) 또는 거버넌스(G) 영역에 속하지만, 사회(S) 영역과는 명확히 구분되지 않는 항목들을 포함시켰습니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 1의 사회(S) 이슈 관련 법령 목록에는 유가증권시장 공시규정이 포함되지 않았으며, 자료 3에서 해당 법령이 거버넌스(G) 이슈(이사회, 주주권 보호)와 연결됨이 확인됩니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p164-c01 · 슬라이드 164 · distance=0.8102574348449707</div><pre>기술연구소- ESG 경영팀
+이슈별 관계법령(2)
+Social
+Issue | 법령
+인권 | 사회보장기본법, 남녀고용평등법, 장애인차별금지 및 권리구제 등에 관한 법률, 양성평등기본법, 직업안정법</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p165-c01 · 슬라이드 165 · distance=0.9745592474937439</div><pre>기술연구소- ESG 경영팀
+이슈별 관계법령(3)
+Governance
+Issue | 법령
+주주권 보호 | 유가증권시장 공시규정
+이사회 | 상법, 자본시장법
+이해충돌방지 | 상법, 자본시장법</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 9</span>
+        <span>CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</span>
+        <code>recursive-q09</code></div>
+      <h3>CO2 용접에서 판두께가 3mm 미만인 경우, 용접부의 용입 깊이를 확보하기 위해 적용되는 비드 형상의 각도 범위는 어떻게 되는가?</h3>
+      <ol><li>30˚≤θ≤60˚</li><li>15˚≤θ≤45˚</li><li>75˚≤θ≤90˚</li><li>θ≤15˚</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 30˚≤θ≤60˚</div>
+        <p><b>해설</b><br>판두께 3mm 미만 조건에서 용접 각도 θ는 30˚ 이상 60˚ 이하로 규정되며, 이는 자료 2의 1) 항목에서 명시된 기준입니다. 용입 깊이 20% 이상은 별도의 검사 항목으로, 본 질문의 정답 범위를 벗어납니다.</p>
+        <p class="evidence"><b>근거</b><br>1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p101-c02 · 슬라이드 101 · distance=0.7857962846755981</div><pre>LUG 용접 |
+검사
+기준 |  |  |  |
+| 1. 각 장 ℓ은 박판측 판두께(t) 이상
+2.
+r은 ℓ의 50% 이내 |  | 1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚
+2) 용입 P는 판두께의 20% 이상 |
+점검항목 | ③용접길이 | ④언더컷 | ⑤균열 및 슬래그 | ⑥용접강도
+검사</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 10</span>
+        <span>다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</span>
+        <code>recursive-q10</code></div>
+      <h3>&#x27;프로세스 사인 오프 단계&#x27;에서 점검하지 않는 항목은 협력사 연간 생산량, UPH 확보 점검, 외주부품 운용 실적 점검, P1 문제점 개선 및 신뢰성 완료 점검, F/PROOF, 자동검사 제조공정 구축승인 및 F/TOOL 확보현황과 구분되는 어떤 항목인가?</h3>
+      <ol><li>SQ 인증여부 및 물류적합성 점검</li><li>생산라인 에너지 효율성 검토</li><li>차량 도장 색상 일관성 검증</li><li>임시 작업자 안전 교육 이수율</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — SQ 인증여부 및 물류적합성 점검</div>
+        <p><b>해설</b><br>&#x27;프로세스 사인 오프 단계&#x27;는 주로 제조공정 구축 승인, 문제점 개선, 생산량 확보 등과 관련된 점검을 수행하지만, SQ 인증 및 물류적합성 점검은 해당 단계의 주요 검토 항목에 포함되지 않습니다. 참고자료 2의 슬라이드 107에서 &#x27;SQ 인증여부 및 물류적합성 점검&#x27;이 별도로 언급되며, 다른 항목들은 프로세스 사인 오프 단계의 구체적인 업무 내용으로 명시되어 있습니다.</p>
+        <p class="evidence"><b>근거</b><br>제조공정 구축 승인 - F/PROOF, 자동검사 제조공정 구축승인 및 F/TOOL 확보현황 - F/PROOF, 자동검사, 초중종물 P1 문제점 개선 및 신뢰성 완료 점검 CAPA 확보 실적 확인 점검 협력사 연간 생산량, UPH 확보 점검 외주부품 운용 실적 점검 SQ 인증여부 및 물류적합성 점검</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p107-c04 · 슬라이드 107 · distance=1.113411545753479</div><pre>승인)
+제조공정 구축 승인
+- F/PROOF, 자동검사 제조공정 구축승인 및 F/TOOL 확보현황
+- F/PROOF, 자동검사, 초중종물
+P1 문제점 개선 및 신뢰성 완료 점검
+4
+11
+동일
+CAPA 확보
+실적 확인 점검
+협력사 연간 생산량, UPH 확보 점검
+외주부품 운용
+실적 점검
+SQ 인증여부 및 물류적합성 점검
+동일</pre></div></div>
+    </article>
+    </div></section></div>
+    </section>
+    
+    <section class="panel-section" id="experiment-1">
+      <div class="panel">
+        <h2>sentence_pack (size=300, overlap=1)</h2>
+        <p class="muted">퀴즈 10개 · 실패 0개 · Recall@K 0.917 · Precision@K 0.240 · MRR 1.000</p>
+      </div>
+      <div class="topic-list"><section class="topic-group"><h3>주제: 프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 1</span>
+        <span>프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</span>
+        <code>sentence_pack-q01</code></div>
+      <h3>프로젝션 용접에서 이종 재질 접합 시 열적·기계적 불균형을 유발하는 재료의 물리적 특성 중, 열변형과 잔류응력을 주로 발생시키는 요인은 무엇인가?</h3>
+      <ol><li>전기 전도도 불균형</li><li>열팽창 계수 차이</li><li>탄성 계수 불일치</li><li>밀도 차이</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 열팽창 계수 차이</div>
+        <p><b>해설</b><br>프로젝션 용접에서 이종 재질 접합이 어려운 주된 원인은 재료 간 열팽창 계수 차이로 인해 용접 과정에서 불균일한 열변형이 발생하기 때문입니다. 이는 잔류응력과 변형을 유발하며, 다른 답변들은 부차적인 영향 요인입니다.</p>
+        <p class="evidence"><b>근거</b><br>열변형이 잔류응력, 산화가 적음 / 이종 재질의 접합이 곤란</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p099-c02 · 슬라이드 99 · distance=0.7816318273544312</div><pre>열변형이 잔류응력, 산화가 적음
+단점 | 적당한 비파괴 검사가 어려움
+설비 복잡하고 고가
+용접부의 위치,형상 등 영향 큼
+이종 재질의 접합이 곤란
+용접기의 용량에 비해 용접능력한정되며 재질,판두께 등 재료 영향이 큼
+1차 전원
+너겟
+2차 케이블
+-종류: 점 용점, 프로젝션 용접, 심 용접
+▶ 프로젝션 용접의 원리
+▣발열량(Q) | =0.24 × 전류2 × 저항 × 통전시간 = 0.24 I2RT (cal)
+※ 4대 조건 | 전류, 가압력, 통전시간, 엠보 품질</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 2</span>
+        <span>프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</span>
+        <code>sentence_pack-q02</code></div>
+      <h3>다음 중 &#x27;프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>유압 프레스</li><li>기계식 프레스</li><li>유체 압력을 이용한 프레스</li><li>유압 방식 프레스</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 기계식 프레스</div>
+        <p><b>해설</b><br>기계식 프레스는 크랭크 축 등의 기계적 구조를 통해 슬라이드를 작동시키며, 유체를 이용하지 않기 때문에 해당 분류에 속하지 않습니다.</p>
+        <p class="evidence"><b>근거</b><br>유압프레스에 적합; 유체을 압력을 이용하여 슬라이드를 작동; 기계력을 이용하여 크랭크 등을 회전시켜 슬라이드를 작동</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p016-c01 · 슬라이드 16 · distance=0.6559597849845886</div><pre>생산본부-생산관리팀
+1-2 차체 제조공정_프레스/금형
+프레스의 분류
+동력원에 따른 분류
+프레임 형식에 따른 분류
+유압 프레스
+C형 프레임 프레스
+H형 프레임 프레스
+4주형 프레임 프레스
+기계 프레스
+소형(200T 이하)에 적합
+앞 벌어짐 발생 우려
+중대형(300T 이상)에 적합
+안정적인 구조
+특수목적(소형)
+유압프레스에 적합
+유체을 압력을 이용하여 슬라이드를 작동
+기계력을 이용하여 크랭크 등을 회전시켜 슬라이드를 작동</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 3</span>
+        <span>다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</span>
+        <code>sentence_pack-q03</code></div>
+      <h3>다음 중 생산관리에서 설비의 성능, 시간, 품질 측면의 종합적 효율성을 평가하는 척도와 직접적인 관련이 없는 항목은 무엇인가?</h3>
+      <ol><li>JIT(Just In Time)</li><li>용접 검사 정확도</li><li>비전검사 오류율</li><li>설비 유지보수 주기</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — JIT(Just In Time)</div>
+        <p><b>해설</b><br>JIT(Just In Time)는 재고 최소화를 위한 생산 방식으로, 설비 종합효율 평가 척도(성능·시간·품질 관리)와 직접적인 연관성이 없습니다. 나머지 항목들은 모두 설비 효율 평가 또는 Loss 분석과 관련된 개념입니다.</p>
+        <p class="evidence"><b>근거</b><br>종합효율은 설비를 성능, 시간, 품질면으로 얼마나 효율적으로 관리하였는가를 종합적으로 평가하는 척도이며, JIT는 생산관리 목표 중 &#x27;적시적정생산&#x27;을 위한 별도의 개념입니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p057-c01 · 슬라이드 57 · distance=0.9653335213661194</div><pre>생산본부-생산관리팀
+2-4 생산관리 세부업무
+종합효율 용어
+종합효율
+설비를 성능, 시간, 품질면으로 얼마나 효율적으로 관리하였는가를 종합적으로 평가하는 척도
+소요된 모든 공수에 대한 정상적으로 작업된 공수의 비율
+기호 | 용어 | 의미
+A | 부하시간 | 생산계획상 가동해야 할 시간
+(조업시간) – (계획정지시간)
+B | 정지시간 | 설비의 가동이 돌발 중단된 시간
+C | 가동시간 | 정지시간을 제외한 부하시간
+D | 이론 C/T | 표준조건하에서의 단위작업시간
+E | 생산량 | 생산계획상 가동해야 할 시간</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p059-c01 · 슬라이드 59 · distance=1.1154656410217285</div><pre>생산본부-생산관리팀
+2-4 생산관리 세부업무
+설비 Loss 분석 (6대 Loss)
+종합효율 관리 적용대상
+Bottle Neck 공정:                           공정 중 C/T가 가장 느려 병목현상을 유발하는 공정
+설비수가 많은 병렬공정
+배치인원이 많은 공정
+가치
+가동시간
+불량, 수정
+초기수율
+불량Loss
+정비가동시간
+순간정지
+속도저하
+속도Loss
+가동시간
+부하시간
+고장
+기종교체
+정지Loss
+조업시간
+계획정지
+관리착오
+관리Loss
+6대 Loss</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p054-c03 · 슬라이드 54 · distance=1.2077395915985107</div><pre>원가: 재료비, 노무비,경비 등
+품질관리
+AQL(Acceptance Quality Level) 항시 달성
+공급
+JIT(Just In Time): 적시적정생산을 통해 결품 최소화
+[생산관리 목표]</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 4</span>
+        <span>피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</span>
+        <code>sentence_pack-q04</code></div>
+      <h3>피딩 공정에서 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중, 압력 게이지로 측정하는 항목은 무엇인가?</h3>
+      <ol><li>피딩 롤 압력</li><li>피딩 롤 회전 속도</li><li>피딩 롤 표면 온도</li><li>피딩 롤 축 정렬도</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 피딩 롤 압력</div>
+        <p><b>해설</b><br>피딩 롤 압력 부족은 슬립 현상을 유발하여 롤 마크가 발생하는 주요 원인입니다. 따라서 압력 게이지 점검이 필수적이며, 이는 자료 1과 자료 2에서 명시적으로 언급된 관리 항목입니다. 다른 항목들은 표면 상태나 유지보수 주기와 관련되어 있으나, 압력 측정과 직접적인 연관성이 없습니다.</p>
+        <p class="evidence"><b>근거</b><br>① 롤 마크 : 피딩공정 롤 압력 부족시 슬립현상 / ② 피딩 롤 압력 게이지 점검</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p096-c01 · 슬라이드 96 · distance=0.48293137550354004</div><pre>생산본부- 품질보증팀
+블랭킹 라인 품질 관리 [프레스]
+관리 항목 |  | 롤 마크/스크레치 | 품질 영향 | 판넬 외관불량(폐기 및 리워크 대응 손실예상) |
+현상 | ① 롤 마크 : 피딩공정 롤 압력 부족시 슬립현상
+② 스크래치 : 피딩공정 롤 표면 마모 |  |  | 관리
+내용 | ① 피딩 롤 표면 거칠기 상태 점검
+② 피딩 롤 압력 게이지 점검
+점검
+방법 | ① 피딩 롤 표면 거칠기 상태 점검(기준 없을것)
+② 롤(3종류) 교체주기 설정 : 1회/2년</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p032-c01 · 슬라이드 32 · distance=0.645117998123169</div><pre>생산본부-생산관리팀
+1-2 차체 제조공정_품질관리
+공정별 품질관리 방안 및 사례 (프레스)
+블랭킹(샤링)
+금형관리
+소재(코일)
+[세척유를 이용한 금형 청소]
+[피딩 롤]
+표면 긁힘 및 선 자국으로 인한 외관 품질 저하
+현상 및 문제점
+[피딩 공정]
+[금형 외관 품질 저하]
+피딩 롤 표면 압력 부족시 슬립
+→롤 마크 발생
+(외관불량)
+[선자국]
+[긁힘]
+금형 세척효과 미흡 및 외관품질 저하
+[1.
+피딩 롤 상태 점검]
+개선 방안
+[1.
+RFID를 통한 세척주기 파악]
+[1.
+소재 검사성적서]
+[2.
+외관품질 판정 관리]
+[2.</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 5</span>
+        <span>차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?</span>
+        <code>sentence_pack-q05</code></div>
+      <h3>다음 중 &#x27;차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>PNL ASSY-QTR INR COMPL</li><li>PNL ASSY-RR FLR COMPL</li><li>PNL ASSY-RR FLR COMPL 위치</li><li>PNL ASSY-RR FLR COMPL 기능</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — PNL ASSY-QTR INR COMPL</div>
+        <p><b>해설</b><br>PNL ASSY-QTR INR COMPL은 후방부 플로어 구성 및 비틀림 강성 개선, RR SEAT 체결 기능을 수행하지 않으며, 주로 RR SUSPENSION 입력 지탱 및 이물질 침입 방지 기능을 수행합니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 2의 6-2) PNL ASSY-QTR INR COMPL 기능은 RR SUSPENSION 입력 지탱, RR WINDOW 지지, 이물질 침입 방지 등으로 명시되어 있으며, 후방부 플로어 구성 또는 비틀림 강성 개선 기능이 없습니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p139-c01 · 슬라이드 139 · distance=0.3236025869846344</div><pre>개발본부- 제품설계팀
+부품구조 및 기능
+7-1)  PNL ASSY-RR FLR COMPL 위치
+7-2)  PNL ASSY-RR FLR COMPL 기능
+- 차체 CTR FLR, BACK PNL과 체결되어 FLOOR 후방부를 구성하며 차체의 비틀림, 강성    (정강성/동강성/판넬/입력점) 및 후방 충돌 성능을 만족
+- 뒷자석 승객의 및 화물 적재 공간 확보
+- RR SEAT 및 RR SEAT BELT 체결</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p138-c01 · 슬라이드 138 · distance=0.6909721493721008</div><pre>개발본부- 제품설계팀
+부품구조 및 기능
+6-1)  PNL ASSY-QTR INR COMPL 위치
+6-2)  PNL ASSY-QTR INR COMPL 기능
+- RR SUSPENSION으로부터의 입력을 지탱
+- RR WINDOW 지지
+- RR SEAT BELT 체결 - 노면으로부터 진흙,물 등 이물질 침입방지 기능 → W/HSE,QTR INR 기능 HOLE 최소화
+- 주요 장착 파트      ① RR WHEEL GUARD ② RR SEAT BELT ③ RR WINDOW ④ RR SUSPENSION</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p085-c03 · 슬라이드 85 · distance=0.709565281867981</div><pre>|  |  | ③ SEAT BELT 체결
+6 |  | 품 명 | PNL - RAIL ROOF
+|  | 기 능 | ① ROOF 지지
+|  |  | ② S/VISOR 지지
+|  |  | ③S/ROOF GLASS 지지
+6
+1
+3
+5
+4
+6
+5
+2
+4
+8
+7
+9
+8
+7 |  | 품 명 | PNL ASSY-CTR CROSS COMPL
+|  | 기 능 | ① FR SEAT 체결
+|  |  | ② 승객 및 화물지지
+8 |  | 품 명 | PNL ASSY-RR FLR COMPL
+|  | 기 능 | ① RR SEAT 체결</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 6</span>
+        <span>스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</span>
+        <code>sentence_pack-q06</code></div>
+      <h3>다음 중 &#x27;스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>Virtuous cycle (이상 징후 포착 → 데이터 축적 → IoT 기반 품질관리 자동화 → 설비관리 → 생산 시스템 개선)</li><li>Big Data 분석을 통한 이상 신호 감지 및 예방 보전</li><li>Fool Proof 시스템을 통한 작업자 실수 방지</li><li>LOT 기반 품질이력관리시스템을 통한 실시간 원격 모니터링</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 3번 — Fool Proof 시스템을 통한 작업자 실수 방지</div>
+        <p><b>해설</b><br>Fool Proof 시스템은 작업자의 실수를 방지하기 위한 물리적/전자적 안전 장치이지만, Big Data 분석, IoT 기반 자동화, 데이터 축적 등을 연계한 순환적 메커니즘과는 직접적인 연관성이 없습니다. 이는 주로 인간 오류 감소에 초점을 둔 개별 공정 관리 기술입니다.</p>
+        <p class="evidence"><b>근거</b><br>Fool Proof는 작업자의 오조립/누락 방지를 위한 근접 센서, 순차로딩 등 실수 방지 장치이며, 자료 5에서 언급되지만 Big Data/IoT 기반 순환적 메커니즘과 무관합니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p150-c01 · 슬라이드 150 · distance=0.5673277378082275</div><pre>기술연구소- 비전연구팀
+주요업무(3)
+스마트팩토리 구축
+Big Data를 통해 이상 징후를 사전 포착, 관리하여 생산 가동률 향상
+Big Data
+축적된 Data를 바탕으로
+생산 시스템을 통계 관리
+이상 발생
+사전 차단
+Big Data를 분석 하여
+이상 신호 감지 및 생산 최적화
+예방 보전
+Big Data의 활용을 통한
+이상 징후 사전 차단, 관리
+예방 보전
+Virtuous
+cycle
+이상 징후 포착
+데이터
+축척
+IoT
+품질관리
+자동화를 통해 신속/정밀한 검사를 시행
+제조 현장의 품질 일원화
+설비관리</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p156-c01 · 슬라이드 156 · distance=0.8938466310501099</div><pre>기술연구소- 비전연구팀
+관련시스템(6)
+통합관리시스템
+통합 관제시스템
+LOT기반 품질이력관리시스템
+개
+요
+개
+요
+제품의 소재입고, 생산, 품질검사, 출고, 납품까지의 모든 이력에 대한
+실시간 원격 모니터링 관리가 가능한 시스템
+차체 부품 조립 시, 각 공정 별 용접, 비전검사 및 제품 상태정보를 LOT별로
+수집 가능한 품질이력관리시스템
+효과
+효과
+ㆍ신속한 생산 데이터 공유를 통한 생산성 향상 효과
+ㆍ빅데이터 클라우드를 통한 관리 기능 향상 효과
+ㆍ각 공정 별 용접, 비전검사, 제품상태에 대한 관리 및 LOT 추적 가능</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p030-c01 · 슬라이드 30 · distance=0.9764209389686584</div><pre>생산본부-생산관리팀
+1-2 차체 제조공정_품질관리
+양산제품 품질관리 ②
+[제품 관리계획서]
+FOOL PROOF
+Fool(바보) + Proof(검증) : 바보도 할 수 있는 → 절대 실수할 수 없는 실수 방지장치, 안전 설계 등의 의미 포함
+오조립, 하드웨어 누락 등 작업자의 능률 미숙으로 인해 생길 수 있는 불량을 근접 센서, 순차로딩, 인터락 등 다양한 수단을 통해 미연에 방지
+관리 항목 |  |  |  | 특별 | 관리 기준 |  |  |
+NO | 제품 | 공정 |  | 특성 | 규 격 | 확인방법 | 주 기 | 관리방안</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 7</span>
+        <span>ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</span>
+        <code>sentence_pack-q07</code></div>
+      <h3>다음 중 &#x27;ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>코일 커팅 여부</li><li>재공품 생산</li><li>제품입고</li><li>LOT기반 품질이력관리시스템</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 4번 — LOT기반 품질이력관리시스템</div>
+        <p><b>해설</b><br>LOT기반 품질이력관리시스템은 작업지시 시스템과 직접 연관되지 않고, 품질 이력 추적 및 모니터링에 중점을 둔 별도 시스템입니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 2에서 LOT기반 품질이력관리시스템은 &#x27;제품의 소재입고, 생산, 품질검사, 출고, 납품까지의 모든 이력에 대한 실시간 원격 모니터링 관리&#x27;를 목적으로 언급되며, 자료 3의 ERP를 통한 작업지시 관련 항목(코일 커팅 여부, 재공품 생산, 제품입고)과는 성격이 다릅니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p069-c02 · 슬라이드 69 · distance=0.6019359827041626</div><pre>[본사에서 운용중인 POP시스템]
+[생산정보 실시간 확인]
+[ERP를 통한 작업지시]</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p156-c01 · 슬라이드 156 · distance=0.8668948411941528</div><pre>기술연구소- 비전연구팀
+관련시스템(6)
+통합관리시스템
+통합 관제시스템
+LOT기반 품질이력관리시스템
+개
+요
+개
+요
+제품의 소재입고, 생산, 품질검사, 출고, 납품까지의 모든 이력에 대한
+실시간 원격 모니터링 관리가 가능한 시스템
+차체 부품 조립 시, 각 공정 별 용접, 비전검사 및 제품 상태정보를 LOT별로
+수집 가능한 품질이력관리시스템
+효과
+효과
+ㆍ신속한 생산 데이터 공유를 통한 생산성 향상 효과
+ㆍ빅데이터 클라우드를 통한 관리 기능 향상 효과
+ㆍ각 공정 별 용접, 비전검사, 제품상태에 대한 관리 및 LOT 추적 가능</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p072-c01 · 슬라이드 72 · distance=0.8852713704109192</div><pre>생산본부-생산관리팀
+2-4 생산관리 세부업무
+ERP(Enterprise Resource Planning): 전사적 자원관리
+사내 통합 데이터베이스를 구축하여 회사의 모든 자원을 효율적으로 관리
+코일 커팅 여부
+코일 Cutting
+코일 수불
+시트 생산
+재공품 생산
+샤링 Line
+PRO Line
+제품입고
+재공품 생산
+ERP
+출하
+외주자재
+조립
+입고검사
+외주자재 입고
+ERP
+[ERP를 통한 생산공정 관리]
+초/중/종품 샘플검사, 파괴검사
+불량 재작업/폐기 결정
+반품처리</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 8</span>
+        <span>다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</span>
+        <code>sentence_pack-q08</code></div>
+      <h3>다음 중 &#x27;ESG 사회(Social) 이슈&#x27;와 직접적으로 관련된 법령이 아닌 것은?</h3>
+      <ol><li>화학물질관리법</li><li>특정금융정보법</li><li>소비자기본법</li><li>개인정보 보호법</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 특정금융정보법</div>
+        <p><b>해설</b><br>특정금융정보법은 Governance 영역의 &#x27;자금세탁&#x27; 이슈에 해당하는 법령으로, Social 이슈와는 무관합니다. 나머지 옵션들은 모두 인권, 강제노동/아동노동, 근로조건 등 Social 이슈 관련 법령입니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 1의 Social 이슈 법령 목록과 자료 3의 Governance 이슈 법령 목록을 대조할 때, &#x27;특정금융정보법&#x27;은 Governance 영역의 &#x27;자금세탁&#x27; 항목에 포함되어 있습니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p164-c01 · 슬라이드 164 · distance=0.8305539488792419</div><pre>기술연구소- ESG 경영팀
+이슈별 관계법령(2)
+Social
+Issue | 법령
+인권 | 사회보장기본법, 남녀고용평등법, 장애인차별금지 및 권리구제 등에 관한 법률, 양성평등기본법, 직업안정법
+강제노동/아동노동 | 근로기준법, 근로자복지기본법, 남녀고용평등과 일.가정 양립지원에 관한 법률, 최저임금법, 고용정책기본법, 근로자 퇴직급여 보장법, 아동복지법
+근로조건 | 채용절차의 공정화에 관한 법률, 파견근로자 보호 등에 관한 법률, 외국인 근로자의 고용 등에 관한 법률, 기간제 및 단시간 근로보호 등에 관한 법률</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p165-c01 · 슬라이드 165 · distance=0.9841945171356201</div><pre>기술연구소- ESG 경영팀
+이슈별 관계법령(3)
+Governance
+Issue | 법령
+주주권 보호 | 유가증권시장 공시규정
+이사회 | 상법, 자본시장법
+이해충돌방지 | 상법, 자본시장법
+부패방지 | OECD 부패방지협약, 국제상거래에 있어서 외국공무원에 대한 뇌물방지법, 부정청탁 및 금품 등 수수의 금지에 관한 법률
+자금세탁 | 특정금융정보법, 범죄수익 은닉규제법, 테러자금금지법, 마약거래방지법
+조세회피 | 국제조세조정에 관한 법률</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 9</span>
+        <span>CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</span>
+        <code>sentence_pack-q09</code></div>
+      <h3>CO2 용접에서 판두께가 3mm 미만인 경우, 용접부의 용입 깊이와 관련된 토치 각도의 허용 범위는 어떻게 되는가?</h3>
+      <ol><li>30˚≤θ≤60˚</li><li>15˚≤θ≤30˚</li><li>45˚≤θ≤75˚</li><li>0˚≤θ≤15˚</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 30˚≤θ≤60˚</div>
+        <p><b>해설</b><br>판두께가 3mm 미만일 때 CO2 용접의 각도 기준은 30˚에서 60˚ 사이로 규정되며, 이는 용입 깊이와 직접적인 연관이 있는 기준입니다. 다른 유효 답변들은 용입량이나 직경과 관련된 추가 기준이지만, 질문의 초점인 &#x27;각도&#x27;에 대한 직접적인 답은 아닙니다.</p>
+        <p class="evidence"><b>근거</b><br>1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p101-c01 · 슬라이드 101 · distance=0.6539520025253296</div><pre>생산본부- 품질보증팀
+CO2 용접 품질 관리 [용접]
+관리 항목 | CO2 용접점 외관관리 | 관리기준 (규격) | 용접 표준 (MS SPEC 191-81)
+점검항목 | ①용입량-겹치기 용접 |  | ②용입량-PLUG 용접 |
+검사
+기준 |  |  |  |
+| 1.
+각 장 ℓ은 박판측 판두께(t) 이상
+2.
+r은 ℓ의 50% 이내 |  | 1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚
+2) 용입 P는 판두께의 20% 이상 |
+점검항목 | ③용접길이 | ④언더컷 | ⑤균열 및 슬래그 | ⑥용접강도
+검사
+기준 |  |  |  |</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 10</span>
+        <span>다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</span>
+        <code>sentence_pack-q10</code></div>
+      <h3>자동차 개발 프로세스에서 &#x27;프로세스 사인 오프 단계&#x27;의 업무 개요에 포함되지 않고, 자동차 제조 공정 설명에서 &#x27;TRIM하기 전의 차체 COMPLETE 상태&#x27;를 의미하는 용어와 관련된 활동은 무엇인가?</h3>
+      <ol><li>BODY IN WHITE(BIW) 상태 확인</li><li>PAINTED BODY STORAGE(PBS) 완료 검사</li><li>BALANCE OUT MODEL 단종 프로세스 확인</li><li>TRIM 공정 완료 후 외관 검증</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — BODY IN WHITE(BIW) 상태 확인</div>
+        <p><b>해설</b><br>BODY IN WHITE(BIW)는 차체 조립 상태를 나타내는 제조 공정 용어로, &#x27;프로세스 사인 오프 단계&#x27;의 관리 활동(ISIR 점검, 공정감사, 생산능력 평가 등)과 직접적인 연관성이 없습니다. 반면 other_valid_answers는 모두 자료 5의 PSO 단계별 업무 개요에 명시된 핵심 활동입니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 5의 PSO 단계별 업무 개요에는 &#x27;ISIR 제출 서류 사전 점검&#x27;, &#x27;공정감사 참여&#x27;, &#x27;풀캐파 연속생산 공정점검&#x27; 등이 포함되어 있으나, &#x27;BODY IN WHITE&#x27; 관련 내용은 자료 2의 자동차 제조 공정 설명에만 등장합니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p049-c01 · 슬라이드 49 · distance=1.118606686592102</div><pre>생산본부-생산관리팀
+2-3 신차개발 Process
+자동차 및 개발단계 용어/약어 ④
+용어 | 약어 | 내용 및 의미
+BALANCE OUT MODEL
+(단종모델) |  | MODEL CHANGE, FACE LIFT 등, 신 MODEL 생산으로 생산이 이미 중단된 MODEL을 말함.
+BODY IN WHITE | BIW | TRIM하기 전의 차체 COMPLETE 상태의 CAB
+PAINTED BODY STORAGE | PBS | 자동차 제조공정중 도장완료후의 BODY를 대기시켜 놓는 장소</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p108-c01 · 슬라이드 108 · distance=1.1454110145568848</div><pre>개발본부- 부품개발팀
+PSO
+세부 활동항목
+현 재
+개 정
+▣ PSO 단계별 업무 개요
+5
+M
+ISIR 승인 준비 점검
+(공정감사)
+ISIR 제출 서류 사전 점검
+- 초도품보증서, 신뢰성 성적서 등
+공정감사 참여 및 점검결과 입력
+新ISIR 시스템 구매항목 제출 점검
+- 품질확보계획, 제조공정승인, 공정감사
+공정감사 참여 및 점검결과 입력
+14
+풀캐파
+연속생산 공정점검
+생산능력 (UPH, 가동율 합격율, Cpk)
+공정(특별특성,F/PROOF,자동검사)
+과거차, 작업자, 외주품, 파렛트 점검
+생산능력 (UPH, 가동율 합격율)</pre></div></div>
+    </article>
+    </div></section></div>
+    </section>
+    
+    <section class="panel-section" id="experiment-2">
+      <div class="panel">
+        <h2>slide_aware (size=300, overlap=1)</h2>
+        <p class="muted">퀴즈 10개 · 실패 0개 · Recall@K 0.967 · Precision@K 0.260 · MRR 1.000</p>
+      </div>
+      <div class="topic-list"><section class="topic-group"><h3>주제: 프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 1</span>
+        <span>프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</span>
+        <code>slide_aware-q01</code></div>
+      <h3>프로젝션 용접에서 발열량(Q) 계산에 영향을 주는 재료의 특성으로 인해 이종 재질 접합 시 열분포 불균일이 발생하는 주된 요인은 무엇인가?</h3>
+      <ol><li>열전도율 일치</li><li>전기저항 차이</li><li>표면 산화막 두께</li><li>밀도 분포 균일성</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 전기저항 차이</div>
+        <p><b>해설</b><br>프로젝션 용접은 전류 흐름에 의한 저항열을 이용하는데, 이종 재질 간 전기저항 차이가 클 경우 열발생량이 불균일해져 접합이 어려워집니다. 다른 항목들은 용접 품질에 영향을 미치지만 주된 물리적 메커니즘은 전기저항 차이입니다.</p>
+        <p class="evidence"><b>근거</b><br>프로젝션 용접의 원리에서 발열량(Q) = 0.24 × 전류² × 저항 × 통전시간이며, 재질별 저항 차이가 용접 능력에 큰 영향을 준다고 명시되어 있습니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p099-c02 · 슬라이드 99 · distance=0.8061976432800293</div><pre>[제목] 생산본부- 품질보증팀
+열변형이 잔류응력, 산화가 적음
+단점 | 적당한 비파괴 검사가 어려움
+설비 복잡하고 고가
+용접부의 위치,형상 등 영향 큼
+이종 재질의 접합이 곤란
+용접기의 용량에 비해 용접능력한정되며 재질,판두께 등 재료 영향이 큼
+1차 전원
+너겟
+2차 케이블
+-종류: 점 용점, 프로젝션 용접, 심 용접
+▶ 프로젝션 용접의 원리
+▣발열량(Q) | =0.24 × 전류2 × 저항 × 통전시간 = 0.24 I2RT (cal)
+※ 4대 조건 | 전류, 가압력, 통전시간, 엠보 품질</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 2</span>
+        <span>프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</span>
+        <code>slide_aware-q02</code></div>
+      <h3>다음 중 &#x27;프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>유압 프레스</li><li>기계 프레스</li><li>유체 압력을 이용한 방식</li><li>크랭크 대신 유체를 이용하는 방식</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 기계 프레스</div>
+        <p><b>해설</b><br>기계 프레스는 유체가 아닌 크랭크 등의 기계적 회전 운동을 통해 슬라이드를 작동시키는 방식으로, 유체를 동력원으로 사용하지 않기 때문입니다.</p>
+        <p class="evidence"><b>근거</b><br>유압프레스는 유체을 압력을 이용하여 슬라이드를 작동 / 기계력을 이용하여 크랭크 등을 회전시켜 슬라이드를 작동</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p016-c01 · 슬라이드 16 · distance=0.6594204902648926</div><pre>[제목] 생산본부-생산관리팀
+1-2 차체 제조공정_프레스/금형
+프레스의 분류
+동력원에 따른 분류
+프레임 형식에 따른 분류
+유압 프레스
+C형 프레임 프레스
+H형 프레임 프레스
+4주형 프레임 프레스
+기계 프레스
+소형(200T 이하)에 적합
+앞 벌어짐 발생 우려
+중대형(300T 이상)에 적합
+안정적인 구조
+특수목적(소형)
+유압프레스에 적합
+유체을 압력을 이용하여 슬라이드를 작동
+기계력을 이용하여 크랭크 등을 회전시켜 슬라이드를 작동</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 3</span>
+        <span>다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</span>
+        <code>slide_aware-q03</code></div>
+      <h3>다음 중 생산관리에서 설비의 효율적 운영을 평가하는 &#x27;종합효율&#x27; 계산 시 고려되지 않는 요소는 무엇인가?</h3>
+      <ol><li>원자재 두께 관리</li><li>조업계획 수립 방법</li><li>작업자 숙련도 평가</li><li>설비 설치 위치 선정</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 원자재 두께 관리</div>
+        <p><b>해설</b><br>종합효율 평가 척도는 설비 운영의 성능, 시간, 품질 효율성을 종합적으로 평가하는 지표로, &#x27;원자재 두께 관리&#x27;는 품질보증팀의 외관품질 판정 관리 기준에 해당하며 생산관리팀의 종합효율 계산과는 직접적인 연관성이 없습니다. 나머지 항목들은 모두 설비 효율 분석 및 종합효율 계산에 사용되는 요소들입니다.</p>
+        <p class="evidence"><b>근거</b><br>설비를 성능, 시간, 품질면으로 얼마나 효율적으로 관리하였는가를 종합적으로 평가하는 척도</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p057-c01 · 슬라이드 57 · distance=0.9833859801292419</div><pre>[제목] 생산본부-생산관리팀
+2-4 생산관리 세부업무
+종합효율 용어
+종합효율
+설비를 성능, 시간, 품질면으로 얼마나 효율적으로 관리하였는가를 종합적으로 평가하는 척도
+소요된 모든 공수에 대한 정상적으로 작업된 공수의 비율
+기호 | 용어 | 의미
+A | 부하시간 | 생산계획상 가동해야 할 시간
+(조업시간) – (계획정지시간)
+B | 정지시간 | 설비의 가동이 돌발 중단된 시간
+C | 가동시간 | 정지시간을 제외한 부하시간
+D | 이론 C/T | 표준조건하에서의 단위작업시간
+E | 생산량 | 생산계획상 가동해야 할 시간
+F | 투입량 | 설비에 투입된 제품 수량</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p059-c01 · 슬라이드 59 · distance=1.1260178089141846</div><pre>[제목] 생산본부-생산관리팀
+2-4 생산관리 세부업무
+설비 Loss 분석 (6대 Loss)
+종합효율 관리 적용대상
+Bottle Neck 공정:                           공정 중 C/T가 가장 느려 병목현상을 유발하는 공정
+설비수가 많은 병렬공정
+배치인원이 많은 공정
+가치
+가동시간
+불량, 수정
+초기수율
+불량Loss
+정비가동시간
+순간정지
+속도저하
+속도Loss
+가동시간
+부하시간
+고장
+기종교체
+정지Loss
+조업시간
+계획정지
+관리착오
+관리Loss
+6대 Loss</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 4</span>
+        <span>피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</span>
+        <code>slide_aware-q04</code></div>
+      <h3>피딩 공정에서 롤 마크와 스크래치 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력 측정과 직접적으로 연관된 관리 항목은 무엇인가?</h3>
+      <ol><li>피딩 롤 압력 게이지 점검</li><li>피딩 롤 회전 속도 측정 점검</li><li>피딩 롤 표면 온도 모니터링 점검</li><li>피딩 롤 축 정렬 상태 검사</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 피딩 롤 압력 게이지 점검</div>
+        <p><b>해설</b><br>피딩 롤 압력 게이지 점검은 롤 압력 부족으로 인한 슬립 현상(롤 마크 발생)과 표면 마모(스크래치 발생)를 방지하기 위한 직접적인 압력 측정 항목입니다. 다른 항목들은 표면 상태나 주기적 점검에 초점을 두고 있으나, 압력 게이지 점검만이 압력 조건을 명시적으로 관리합니다.</p>
+        <p class="evidence"><b>근거</b><br>① 롤 마크 : 피딩공정 롤 압력 부족시 슬립현상 ② 스크래치 : 피딩공정 롤 표면 마모 | ① 피딩 롤 표면 거칠기 상태 점검 ② 피딩 롤 압력 게이지 점검</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p096-c01 · 슬라이드 96 · distance=0.47031542658805847</div><pre>[제목] 생산본부- 품질보증팀
+블랭킹 라인 품질 관리 [프레스]
+관리 항목 |  | 롤 마크/스크레치 | 품질 영향 | 판넬 외관불량(폐기 및 리워크 대응 손실예상) |
+현상 | ① 롤 마크 : 피딩공정 롤 압력 부족시 슬립현상
+② 스크래치 : 피딩공정 롤 표면 마모 |  |  | 관리
+내용 | ① 피딩 롤 표면 거칠기 상태 점검
+② 피딩 롤 압력 게이지 점검
+점검
+방법 | ① 피딩 롤 표면 거칠기 상태 점검(기준 없을것)
+② 롤(3종류) 교체주기 설정 : 1회/2년
+③ 블랭킹 라인 롤 압력 점검(1회/주) |  |  | 점검 주기 | 항목별 점검주기 준수</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 5</span>
+        <span>차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?</span>
+        <code>slide_aware-q05</code></div>
+      <h3>다음 중 &#x27;차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>PNL ASSY-COWL COMPL</li><li>PNL ASSY-RR FLR COMPL</li><li>PNL ASSY-CTR CROSS COMPL</li><li>PNL ASSY-QTR INR COMPL</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — PNL ASSY-COWL COMPL</div>
+        <p><b>해설</b><br>PNL ASSY-COWL COMPL은 차량의 전방부에 위치하며 비틀림 강성 향상을 위한 횡부재 역할과 환기 덕트 기능을 수행하며, 후방부 플로어 구성이나 RR SEAT 체결 기능과 무관합니다.</p>
+        <p class="evidence"><b>근거</b><br>- FR PLR LH/RH 사이를 연결하는 횡부재로 비틀림 강성에 대해 중요한 역할을 담당
+- 차 실내로 외기를 도입하여 실내의 환기를 위한 덕트 기능 및 빗물등의 배수로 역할을 담당</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p133-c01 · 슬라이드 133 · distance=0.7050369381904602</div><pre>[제목] 개발본부- 제품설계팀
+부품구조 및 기능
+1-1)  PNL ASSY-COWL COMPL 위치
+1-2)  PNL ASSY-COWL COMPL 기능
+- FR PLR LH/RH 사이를 연결하는 횡부재로 비틀림 강성에 대해 중요한 역할을 담당
+- CLOSE TYPE과 OPEN TYPE이 있고 구조결정은 WIPER LINKAGE MODULE등의    PACKAGE L/OUT 및 STYL’G에 의해 결정 됨.
+- 차 실내로 외기를 도입하여 실내의 환기를 위한 덕트 기능 및 빗물등의 배수로 역할을 담당</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 6</span>
+        <span>스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</span>
+        <code>slide_aware-q06</code></div>
+      <h3>다음 중 &#x27;스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>예방 보전(Virtuous cycle)</li><li>통합 관제시스템</li><li>통합자원관리시스템</li><li>LOT기반 품질이력관리시스템</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 3번 — 통합자원관리시스템</div>
+        <p><b>해설</b><br>통합자원관리시스템은 스마트팩토리의 순환적 메커니즘과 직접적인 연관성이 없는 일반적인 자원 관리 시스템으로, Big Data 분석이나 IoT 기반 품질관리 자동화와 같은 핵심 기능을 포함하지 않습니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 1에서 &#x27;예방 보전(Virtuous cycle)&#x27;은 이상 징후 포착, 데이터 축적, IoT 기반 품질관리 자동화 등을 연계한 순환적 메커니즘으로 명시되었으며, 자료 2에서 &#x27;통합 관제시스템&#x27;과 &#x27;LOT기반 품질이력관리시스템&#x27;은 실시간 모니터링 및 품질 이력 추적 기능을 통해 생산 시스템 개선에 기여하는 것으로 설명되었습니다. 반면 &#x27;통합자원관리시스템&#x27;은 자료 4에 언급되었으나, 이는 일반적인 자원 관리 시스템으로 스마트팩토리의 순환적 메커니즘과 무관합니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p150-c01 · 슬라이드 150 · distance=0.5650938153266907</div><pre>[제목] 기술연구소- 비전연구팀
+주요업무(3)
+스마트팩토리 구축
+Big Data를 통해 이상 징후를 사전 포착, 관리하여 생산 가동률 향상
+Big Data
+축적된 Data를 바탕으로
+생산 시스템을 통계 관리
+이상 발생
+사전 차단
+Big Data를 분석 하여
+이상 신호 감지 및 생산 최적화
+예방 보전
+Big Data의 활용을 통한
+이상 징후 사전 차단, 관리
+예방 보전
+Virtuous
+cycle
+이상 징후 포착
+데이터
+축척
+IoT
+품질관리
+자동화를 통해 신속/정밀한 검사를 시행
+제조 현장의 품질 일원화
+설비관리</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p156-c01 · 슬라이드 156 · distance=0.8874666690826416</div><pre>[제목] 기술연구소- 비전연구팀
+관련시스템(6)
+통합관리시스템
+통합 관제시스템
+LOT기반 품질이력관리시스템
+개
+요
+개
+요
+제품의 소재입고, 생산, 품질검사, 출고, 납품까지의 모든 이력에 대한
+실시간 원격 모니터링 관리가 가능한 시스템
+차체 부품 조립 시, 각 공정 별 용접, 비전검사 및 제품 상태정보를 LOT별로
+수집 가능한 품질이력관리시스템
+효과
+효과
+ㆍ신속한 생산 데이터 공유를 통한 생산성 향상 효과
+ㆍ빅데이터 클라우드를 통한 관리 기능 향상 효과
+ㆍ각 공정 별 용접, 비전검사, 제품상태에 대한 관리 및 LOT 추적 가능</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p006-c01 · 슬라이드 6 · distance=0.9458110332489014</div><pre>[제목] WWW.WAMC.CO.KR
+006
+신기술 보유현황
+스마트 팩토리 기술
+공장통합관리시스템
+글로벌 네트워크 관리
+설비관리시스템
+품질관리시스템
+안전관리시스템
+물류관리시스템
+용접설비자동진단시스템
+용접팁연마분석장치
+타각문자/바코드인식시스템
+CO2 용접비드 3D 검사시스템너트용접품질검사시스템
+구조용접착제 비전검사시스템
+제조공정모니터링시스템
+지게차모니터링시스템
+공장보안시스템
+차량보안솔루션
+납품차량관제시스템
+팔레트모니터링시스템
+용접품질통합관리시스템
+통합자원관리시스템
+101년을 생각하는 자동차 부품 전문기업</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 7</span>
+        <span>ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</span>
+        <code>slide_aware-q07</code></div>
+      <h3>ERP 시스템에서 실시간으로 작업지시와 직접 연동되어 생산 현황을 모니터링하는 데 주로 사용되는 시스템은 무엇인가?</h3>
+      <ol><li>생산일정계획시스템</li><li>실시간재고추적시스템</li><li>공정자동화제어시스템</li><li>POP시스템</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 4번 — POP시스템</div>
+        <p><b>해설</b><br>POP시스템은 ERP를 통해 작업지시를 실시간으로 연동하고 생산정보를 확인하는 데 특화된 시스템으로, 다른 시스템들은 품질 이력 관리나 통합 관제 등 다른 기능에 중점을 두고 있습니다.</p>
+        <p class="evidence"><b>근거</b><br>[본사에서 운용중인 POP시스템][생산정보 실시간 확인][ERP를 통한 작업지시]</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p069-c02 · 슬라이드 69 · distance=0.6589019298553467</div><pre>[제목] 생산본부-생산관리팀
+[본사에서 운용중인 POP시스템]
+[생산정보 실시간 확인]
+[ERP를 통한 작업지시]</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 8</span>
+        <span>다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</span>
+        <code>slide_aware-q08</code></div>
+      <h3>다음 중 &#x27;다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>남녀고용평등법</li><li>공정거래위원회법</li><li>근로자복지기본법</li><li>채용절차의 공정화에 관한 법률</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 공정거래위원회법</div>
+        <p><b>해설</b><br>공정거래위원회법은 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않습니다. 참고자료에 명시된 사회(Social) 이슈 관련 법령은 인권, 강제노동/아동노동, 근로조건 등과 직접 연관된 법률들로 구성되어 있으며, 공정거래위원회법은 경쟁 제한 방지 및 시장 질서 유지를 목적으로 하는 경제 관련 법령입니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 1의 Social 이슈 관련 법령 목록(사회보장기본법, 남녀고용평등법, 장애인차별금지법 등)과 자료 3의 Governance 이슈 관련 법령 목록(상법, 자본시장법 등)을 종합할 때, 공정거래위원회법은 ESG 사회 이슈 법령 분류 체계에 포함되지 않습니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p164-c01 · 슬라이드 164 · distance=0.8208749890327454</div><pre>[제목] 기술연구소- ESG 경영팀
+이슈별 관계법령(2)
+Social
+Issue | 법령
+인권 | 사회보장기본법, 남녀고용평등법, 장애인차별금지 및 권리구제 등에 관한 법률, 양성평등기본법, 직업안정법
+강제노동/아동노동 | 근로기준법, 근로자복지기본법, 남녀고용평등과 일.가정 양립지원에 관한 법률, 최저임금법, 고용정책기본법, 근로자 퇴직급여 보장법, 아동복지법
+근로조건 | 채용절차의 공정화에 관한 법률, 파견근로자 보호 등에 관한 법률, 외국인 근로자의 고용 등에 관한 법률, 기간제 및 단시간 근로보호 등에 관한 법률</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p165-c01 · 슬라이드 165 · distance=0.9659072756767273</div><pre>[제목] 기술연구소- ESG 경영팀
+이슈별 관계법령(3)
+Governance
+Issue | 법령
+주주권 보호 | 유가증권시장 공시규정
+이사회 | 상법, 자본시장법
+이해충돌방지 | 상법, 자본시장법
+부패방지 | OECD 부패방지협약, 국제상거래에 있어서 외국공무원에 대한 뇌물방지법, 부정청탁 및 금품 등 수수의 금지에 관한 법률
+자금세탁 | 특정금융정보법, 범죄수익 은닉규제법, 테러자금금지법, 마약거래방지법
+조세회피 | 국제조세조정에 관한 법률
+정보보호 | 개인정보보호법, 정보통신망법, 신용정보법, 의료법, 위치정보법, 전자상거래법, 전자금융거래법</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 9</span>
+        <span>CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</span>
+        <code>slide_aware-q09</code></div>
+      <h3>CO2 용접에서 판두께가 3mm 미만인 경우, 용입 깊이와 관련된 용접 각도의 허용 범위는 어떻게 되는가?</h3>
+      <ol><li>30˚≤θ≤60˚</li><li>15˚≤θ≤45˚</li><li>75˚≤θ≤90˚</li><li>10˚≤θ≤30˚</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 30˚≤θ≤60˚</div>
+        <p><b>해설</b><br>판두께가 3mm 미만일 때 용입 깊이와 관련된 용접 각도의 기준은 30˚에서 60˚ 사이로 명시되어 있습니다. 다른 항목들은 용입량이나 형상 관련 기준이지만, 각도 기준과 직접적인 연관성이 없습니다.</p>
+        <p class="evidence"><b>근거</b><br>1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p101-c01 · 슬라이드 101 · distance=0.6416281461715698</div><pre>[제목] 생산본부- 품질보증팀
+CO2 용접 품질 관리 [용접]
+관리 항목 | CO2 용접점 외관관리 | 관리기준 (규격) | 용접 표준 (MS SPEC 191-81)
+점검항목 | ①용입량-겹치기 용접 |  | ②용입량-PLUG 용접 |
+검사
+기준 |  |  |  |
+| 1.
+각 장 ℓ은 박판측 판두께(t) 이상
+2.
+r은 ℓ의 50% 이내 |  | 1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚
+2) 용입 P는 판두께의 20% 이상 |
+점검항목 | ③용접길이 | ④언더컷 | ⑤균열 및 슬래그 | ⑥용접강도
+검사
+기준 |  |  |  |</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 10</span>
+        <span>다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</span>
+        <code>slide_aware-q10</code></div>
+      <h3>신차개발 프로세스에서 &#x27;양산준비 및 선행양산&#x27; 단계 이후에 진행되며, ISIR 승인 준비 점검과 초도품보증서 제출 서류 사전 점검을 포함하는 단계는 무엇인가?</h3>
+      <ol><li>PSO</li><li>ISIR 승인 완료</li><li>초도품검증 완료</li><li>공정감사 종료</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — PSO</div>
+        <p><b>해설</b><br>PSO(Process Sign Off) 단계는 신차개발 프로세스 후반부에 위치하며, ISIR 승인 준비 점검 및 공정감사가 주요 활동입니다. &#x27;양산준비 및 선행양산&#x27; 이후 M+14~M+20 기간에 수행되며, SOP(Start Of Production) 직전 단계입니다. 다른 보기들은 시간 표기 또는 SOP와 관련된 용어로 PSO와 구분됩니다.</p>
+        <p class="evidence"><b>근거</b><br>PSO 세부 활동항목: ISIR 승인 준비 점검(공정감사), 초도품보증서 제출 서류 사전 점검, 공정감사 참여 및 점검결과 입력</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p108-c01 · 슬라이드 108 · distance=1.1500663757324219</div><pre>[제목] 개발본부- 부품개발팀
+PSO
+세부 활동항목
+현 재
+개 정
+▣ PSO 단계별 업무 개요
+5
+M
+ISIR 승인 준비 점검
+(공정감사)
+ISIR 제출 서류 사전 점검
+- 초도품보증서, 신뢰성 성적서 등
+공정감사 참여 및 점검결과 입력
+新ISIR 시스템 구매항목 제출 점검
+- 품질확보계획, 제조공정승인, 공정감사
+공정감사 참여 및 점검결과 입력
+14
+풀캐파
+연속생산 공정점검
+생산능력 (UPH, 가동율 합격율, Cpk)
+공정(특별특성,F/PROOF,자동검사)
+과거차, 작업자, 외주품, 파렛트 점검
+생산능력 (UPH, 가동율 합격율)</pre></div></div>
+    </article>
+    </div></section></div>
+    </section>
+    
+    <section class="panel-section" id="experiment-3">
+      <div class="panel">
+        <h2>title_body (size=300, overlap=1)</h2>
+        <p class="muted">퀴즈 9개 · 실패 1개 · Recall@K 0.967 · Precision@K 0.260 · MRR 1.000</p>
+      </div>
+      <div class="topic-list"><section class="topic-group"><h3>주제: 프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 1</span>
+        <span>프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</span>
+        <code>title_body-q01</code></div>
+      <h3>프로젝션 용접에서 이종 재질 접합 시 용접부의 열분포와 응고 균일성을 방해하는 주요 물리적 문제는 재료의 어떤 열적 특성 차이로 인해 발생하는가?</h3>
+      <ol><li>열전도율 차이</li><li>열팽창 계수 차이</li><li>비열 용량 차이</li><li>열전도 방향 차이</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 열팽창 계수 차이</div>
+        <p><b>해설</b><br>프로젝션 용접에서 이종 재질 접합이 어려운 주된 원인은 재료 간 열팽창 계수 차이로 인해 용접 과정에서 불균일한 열변형이 발생하기 때문입니다. 이는 잔류응력과 균열로 이어집니다. 다른 항목들은 용접 품질에 영향을 미치지만, 열팽창 계수 차이가 가장 근본적인 물리적 메커니즘입니다.</p>
+        <p class="evidence"><b>근거</b><br>프로젝션 용접의 원리에서 용접부의 위치, 형상 등 영향이 큼 (자료 1) 및 이종 재질의 접합이 곤란 (자료 1)</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p099-c02 · 슬라이드 99 · distance=0.8061976432800293</div><pre>[제목] 생산본부- 품질보증팀
+열변형이 잔류응력, 산화가 적음
+단점 | 적당한 비파괴 검사가 어려움
+설비 복잡하고 고가
+용접부의 위치,형상 등 영향 큼
+이종 재질의 접합이 곤란
+용접기의 용량에 비해 용접능력한정되며 재질,판두께 등 재료 영향이 큼
+1차 전원
+너겟
+2차 케이블
+-종류: 점 용점, 프로젝션 용접, 심 용접
+▶ 프로젝션 용접의 원리
+▣발열량(Q) | =0.24 × 전류2 × 저항 × 통전시간 = 0.24 I2RT (cal)
+※ 4대 조건 | 전류, 가압력, 통전시간, 엠보 품질</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 2</span>
+        <span>프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</span>
+        <code>title_body-q02</code></div>
+      <h3>다음 중 &#x27;프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>유압 프레스</li><li>크랭크 축 프레스</li><li>유체 압력을 이용한 방식</li><li>유압프레스에 적합한 특수목적 프레스</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 크랭크 축 프레스</div>
+        <p><b>해설</b><br>크랭크 축 프레스는 기계 프레스의 핵심 부품으로, 유체가 아닌 기계력을 이용해 슬라이드를 작동시키기 때문에 해당되지 않습니다.</p>
+        <p class="evidence"><b>근거</b><br>유체을 압력을 이용하여 슬라이드를 작동 / 기계력을 이용하여 크랭크 등을 회전시켜 슬라이드를 작동</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p016-c01 · 슬라이드 16 · distance=0.6594204902648926</div><pre>[제목] 생산본부-생산관리팀
+1-2 차체 제조공정_프레스/금형
+프레스의 분류
+동력원에 따른 분류
+프레임 형식에 따른 분류
+유압 프레스
+C형 프레임 프레스
+H형 프레임 프레스
+4주형 프레임 프레스
+기계 프레스
+소형(200T 이하)에 적합
+앞 벌어짐 발생 우려
+중대형(300T 이상)에 적합
+안정적인 구조
+특수목적(소형)
+유압프레스에 적합
+유체을 압력을 이용하여 슬라이드를 작동
+기계력을 이용하여 크랭크 등을 회전시켜 슬라이드를 작동</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 3</span>
+        <span>다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</span>
+        <code>title_body-q03</code></div>
+      <h3>다음 중 생산관리에서 설비의 효율적 운영을 평가하는 &#x27;종합효율&#x27; 계산 시 고려되지 않는 요소는 무엇인가?</h3>
+      <ol><li>원자재 두께 관리</li><li>설비 배치 위치</li><li>작업자 숙련도</li><li>에너지 소비량</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 원자재 두께 관리</div>
+        <p><b>해설</b><br>종합효율 평가 척도는 설비 운영의 성능, 시간, 품질 효율성을 종합적으로 평가하는 지표로, &#x27;원자재 두께 관리&#x27;는 품질보증팀의 외관품질 판정 관리 기준에 해당하며 생산관리팀의 종합효율 계산과 직접적인 연관성이 없습니다. 나머지 항목들은 모두 설비 효율 분석 또는 Loss 관리에 사용되는 요소들입니다.</p>
+        <p class="evidence"><b>근거</b><br>종합효율은 설비를 성능, 시간, 품질면으로 얼마나 효율적으로 관리하였는가를 종합적으로 평가하는 척도이며, 6대 Loss 분석 및 Bottle Neck 공정 관리 등이 포함됩니다(자료 1, 3). 반면 &#x27;원자재 두께 관리&#x27;는 품질보증팀의 외관품질 판정 관리 기준에 해당합니다(자료 4).</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p057-c01 · 슬라이드 57 · distance=0.9833859801292419</div><pre>[제목] 생산본부-생산관리팀
+2-4 생산관리 세부업무
+종합효율 용어
+종합효율
+설비를 성능, 시간, 품질면으로 얼마나 효율적으로 관리하였는가를 종합적으로 평가하는 척도
+소요된 모든 공수에 대한 정상적으로 작업된 공수의 비율
+기호 | 용어 | 의미
+A | 부하시간 | 생산계획상 가동해야 할 시간
+(조업시간) – (계획정지시간)
+B | 정지시간 | 설비의 가동이 돌발 중단된 시간
+C | 가동시간 | 정지시간을 제외한 부하시간
+D | 이론 C/T | 표준조건하에서의 단위작업시간
+E | 생산량 | 생산계획상 가동해야 할 시간
+F | 투입량 | 설비에 투입된 제품 수량</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p059-c01 · 슬라이드 59 · distance=1.1260178089141846</div><pre>[제목] 생산본부-생산관리팀
+2-4 생산관리 세부업무
+설비 Loss 분석 (6대 Loss)
+종합효율 관리 적용대상
+Bottle Neck 공정:                           공정 중 C/T가 가장 느려 병목현상을 유발하는 공정
+설비수가 많은 병렬공정
+배치인원이 많은 공정
+가치
+가동시간
+불량, 수정
+초기수율
+불량Loss
+정비가동시간
+순간정지
+속도저하
+속도Loss
+가동시간
+부하시간
+고장
+기종교체
+정지Loss
+조업시간
+계획정지
+관리착오
+관리Loss
+6대 Loss</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p095-c02 · 슬라이드 95 · distance=1.2080304622650146</div><pre>[제목] 생산본부- 품질보증팀
+원자재 두께 관리
+외관품질 판정 관리
+관리기준
+표면
+비 고
+결함 없음
+육안식별 어려운 결함
+지석검사시 제거되는 결함
+※ 표면검사 도구(오일스톤 )
+구  분
+파 고 (높이)
+기준
+비 고
+형상
+냉연제품
+* 기준 = 높이/피치 x 100
+2.5mm 이하
+0.7% 이하
+도금제품
+파고(높이)
+긁힘
+선 자국
+4.0mm 이하
+1.2% 이하
+피치</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 4</span>
+        <span>피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</span>
+        <code>title_body-q04</code></div>
+      <h3>피딩 공정에서 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력 측정과 직접적으로 관련된 항목은 무엇인가?</h3>
+      <ol><li>피딩 롤 압력 게이지 점검</li><li>피딩 롤 회전 속도 측정 점검</li><li>피딩 롤 표면 온도 모니터링 점검</li><li>피딩 롤 축 정렬 상태 점검</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 피딩 롤 압력 게이지 점검</div>
+        <p><b>해설</b><br>질문은 압력 측정과 직접적으로 관련된 항목을 요구하므로 &#x27;피딩 롤 압력 게이지 점검&#x27;이 정답입니다. &#x27;피딩 롤 표면 거칠기 상태 점검&#x27;은 표면 상태와 관련된 항목이며, &#x27;블랭킹 라인 롤 압력 점검&#x27;은 동일한 압력 측정 항목이지만 질문에서는 피딩 공정에 한정하여 물었기 때문에 제외됩니다.</p>
+        <p class="evidence"><b>근거</b><br>① 롤 마크 : 피딩공정 롤 압력 부족시 슬립현상 / ② 피딩 롤 압력 게이지 점검 / 블랭킹 라인 롤 압력 점검(1회/주) / 피딩 롤 표면 압력 부족시 슬립 →롤 마크 발생</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p096-c01 · 슬라이드 96 · distance=0.47031542658805847</div><pre>[제목] 생산본부- 품질보증팀
+블랭킹 라인 품질 관리 [프레스]
+관리 항목 |  | 롤 마크/스크레치 | 품질 영향 | 판넬 외관불량(폐기 및 리워크 대응 손실예상) |
+현상 | ① 롤 마크 : 피딩공정 롤 압력 부족시 슬립현상
+② 스크래치 : 피딩공정 롤 표면 마모 |  |  | 관리
+내용 | ① 피딩 롤 표면 거칠기 상태 점검
+② 피딩 롤 압력 게이지 점검
+점검
+방법 | ① 피딩 롤 표면 거칠기 상태 점검(기준 없을것)
+② 롤(3종류) 교체주기 설정 : 1회/2년
+③ 블랭킹 라인 롤 압력 점검(1회/주) |  |  | 점검 주기 | 항목별 점검주기 준수</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p032-c01 · 슬라이드 32 · distance=0.6265830993652344</div><pre>[제목] 생산본부-생산관리팀
+1-2 차체 제조공정_품질관리
+공정별 품질관리 방안 및 사례 (프레스)
+블랭킹(샤링)
+금형관리
+소재(코일)
+[세척유를 이용한 금형 청소]
+[피딩 롤]
+표면 긁힘 및 선 자국으로 인한 외관 품질 저하
+현상 및 문제점
+[피딩 공정]
+[금형 외관 품질 저하]
+피딩 롤 표면 압력 부족시 슬립
+→롤 마크 발생
+(외관불량)
+[선자국]
+[긁힘]
+금형 세척효과 미흡 및 외관품질 저하
+[1.
+피딩 롤 상태 점검]
+개선 방안
+[1.
+RFID를 통한 세척주기 파악]
+[1.
+소재 검사성적서]
+[2.
+외관품질 판정 관리]
+[2.
+피딩 롤 압력 점검]</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 5</span>
+        <span>스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</span>
+        <code>title_body-q06</code></div>
+      <h3>다음 중 &#x27;스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>Virtuous cycle: 이상 징후 포착, 데이터 축적, IoT 기반 품질관리 자동화를 통한 생산 시스템 개선</li><li>Big Data 분석을 통한 이상 신호 감지 및 예방 보전</li><li>APMS(Auto Process Management System)를 통한 설계 단계 공정 최적화</li><li>LOT 기반 품질이력관리시스템을 통한 실시간 모니터링 및 생산 데이터 공유</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 3번 — APMS(Auto Process Management System)를 통한 설계 단계 공정 최적화</div>
+        <p><b>해설</b><br>APMS는 자료 3에 언급되지만, &#x27;설계 단계 공정 최적화&#x27;는 스마트팩토리의 순환적 메커니즘과 직접 연관되지 않으며, 이상 징후 사전 포착/데이터 축적/설비관리 연계 등 핵심 기능을 다루지 않음</p>
+        <p class="evidence"><b>근거</b><br>자료 1: &#x27;Virtuous cycle&#x27; 및 &#x27;Big Data를 분석 하여 이상 신호 감지&#x27; / 자료 2: &#x27;LOT 기반 품질이력관리시스템&#x27; / 자료 3: &#x27;APMS&#x27;는 시스템 구성 요소지만 설계 단계 최적화와 무관</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p150-c01 · 슬라이드 150 · distance=0.5650938153266907</div><pre>[제목] 기술연구소- 비전연구팀
+주요업무(3)
+스마트팩토리 구축
+Big Data를 통해 이상 징후를 사전 포착, 관리하여 생산 가동률 향상
+Big Data
+축적된 Data를 바탕으로
+생산 시스템을 통계 관리
+이상 발생
+사전 차단
+Big Data를 분석 하여
+이상 신호 감지 및 생산 최적화
+예방 보전
+Big Data의 활용을 통한
+이상 징후 사전 차단, 관리
+예방 보전
+Virtuous
+cycle
+이상 징후 포착
+데이터
+축척
+IoT
+품질관리
+자동화를 통해 신속/정밀한 검사를 시행
+제조 현장의 품질 일원화
+설비관리</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p156-c01 · 슬라이드 156 · distance=0.8874666690826416</div><pre>[제목] 기술연구소- 비전연구팀
+관련시스템(6)
+통합관리시스템
+통합 관제시스템
+LOT기반 품질이력관리시스템
+개
+요
+개
+요
+제품의 소재입고, 생산, 품질검사, 출고, 납품까지의 모든 이력에 대한
+실시간 원격 모니터링 관리가 가능한 시스템
+차체 부품 조립 시, 각 공정 별 용접, 비전검사 및 제품 상태정보를 LOT별로
+수집 가능한 품질이력관리시스템
+효과
+효과
+ㆍ신속한 생산 데이터 공유를 통한 생산성 향상 효과
+ㆍ빅데이터 클라우드를 통한 관리 기능 향상 효과
+ㆍ각 공정 별 용접, 비전검사, 제품상태에 대한 관리 및 LOT 추적 가능</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p149-c01 · 슬라이드 149 · distance=0.943905770778656</div><pre>[제목] 기술연구소- 비전연구팀
+주요업무(2)
+스마트팩토리 구축
+APMS
+(Auto Process Management System)
+통합데이터관리시스템
+설비관리시스템
+품질관리시스템
+안전관리시스템
+물류관리시스템
+글로벌 네트워크 관리
+용접설비자동진단시스템
+용접팁연마분석장치
+타각문자/바코드인식시스템
+저항점용접설비지능형검사시스템
+Cowl Cross Bar 비전시스템 너트 비전시스템
+패드 비전시스템
+스마트 지그 비전시스템
+실러 비전검사시스템
+제조공정모니터링시스템
+프로젝션 용접기 안전장치
+지게차모니터링 시스템
+팔레트 모니터링시스템
+물류관제시스템
+용접품질통합관리시스템</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 6</span>
+        <span>ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</span>
+        <code>title_body-q07</code></div>
+      <h3>ERP와 직접 연동되어 생산 현황을 실시간으로 모니터링하며 작업지시를 전달하는 시스템은 무엇인가?</h3>
+      <ol><li>MES(Manufacturing Execution System)</li><li>APS(Advanced Planning and Scheduling)</li><li>WMS(Warehouse Management System)</li><li>POP시스템</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 4번 — POP시스템</div>
+        <p><b>해설</b><br>POP시스템은 ERP와 직접 연동되어 작업지시 및 생산정보를 실시간으로 확인할 수 있는 시스템입니다. 다른 시스템들은 품질 이력이나 통합 관제에 중점을 두지만, 작업지시와의 직접적 연동성은 POP시스템이 유일합니다.</p>
+        <p class="evidence"><b>근거</b><br>[본사에서 운용중인 POP시스템][생산정보 실시간 확인][ERP를 통한 작업지시]</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p069-c02 · 슬라이드 69 · distance=0.6589019298553467</div><pre>[제목] 생산본부-생산관리팀
+[본사에서 운용중인 POP시스템]
+[생산정보 실시간 확인]
+[ERP를 통한 작업지시]</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 7</span>
+        <span>다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</span>
+        <code>title_body-q08</code></div>
+      <h3>자료 1의 사회(Social) 이슈 관련 법령 목록에 포함되지 않고, 자료 3의 거버넌스(Governance) 이슈 관련 법령 목록에 명시된 정보보호 분야의 법령은 무엇인가?</h3>
+      <ol><li>환경정책기본법</li><li>개인정보보호법</li><li>산업기술보호법</li><li>에너지이용합리화법</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 개인정보보호법</div>
+        <p><b>해설</b><br>개인정보보호법은 ESG의 거버넌스(Governance) 영역에 해당하는 정보보호 관련 법령이며, 사회(Social) 이슈와는 직접적인 연관성이 없습니다. 반면 다른 보기들은 환경(Environment) 또는 사회(Social) 이슈에 해당하는 법령들입니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 1의 사회(Social) 이슈 관련 법령 목록에는 개인정보보호법이 포함되어 있지 않으며, 자료 3의 거버넌스(Governance) 이슈 관련 법령 목록에 개인정보보호법이 명시되어 있습니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p164-c01 · 슬라이드 164 · distance=0.8208749890327454</div><pre>[제목] 기술연구소- ESG 경영팀
+이슈별 관계법령(2)
+Social
+Issue | 법령
+인권 | 사회보장기본법, 남녀고용평등법, 장애인차별금지 및 권리구제 등에 관한 법률, 양성평등기본법, 직업안정법
+강제노동/아동노동 | 근로기준법, 근로자복지기본법, 남녀고용평등과 일.가정 양립지원에 관한 법률, 최저임금법, 고용정책기본법, 근로자 퇴직급여 보장법, 아동복지법
+근로조건 | 채용절차의 공정화에 관한 법률, 파견근로자 보호 등에 관한 법률, 외국인 근로자의 고용 등에 관한 법률, 기간제 및 단시간 근로보호 등에 관한 법률</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p165-c01 · 슬라이드 165 · distance=0.9659072756767273</div><pre>[제목] 기술연구소- ESG 경영팀
+이슈별 관계법령(3)
+Governance
+Issue | 법령
+주주권 보호 | 유가증권시장 공시규정
+이사회 | 상법, 자본시장법
+이해충돌방지 | 상법, 자본시장법
+부패방지 | OECD 부패방지협약, 국제상거래에 있어서 외국공무원에 대한 뇌물방지법, 부정청탁 및 금품 등 수수의 금지에 관한 법률
+자금세탁 | 특정금융정보법, 범죄수익 은닉규제법, 테러자금금지법, 마약거래방지법
+조세회피 | 국제조세조정에 관한 법률
+정보보호 | 개인정보보호법, 정보통신망법, 신용정보법, 의료법, 위치정보법, 전자상거래법, 전자금융거래법</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 8</span>
+        <span>CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</span>
+        <code>title_body-q09</code></div>
+      <h3>CO2 용접에서 판두께가 3mm 미만인 경우, 용접부의 용입 깊이와 관련된 토치 각도의 허용 범위는 어떻게 되는가?</h3>
+      <ol><li>30˚≤θ≤60˚</li><li>0˚≤θ≤30˚</li><li>60˚≤θ≤90˚</li><li>15˚≤θ≤45˚</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 30˚≤θ≤60˚</div>
+        <p><b>해설</b><br>판두께가 3mm 미만일 때 CO2 용접의 각도 기준은 30˚에서 60˚ 사이로 규정되며, 이는 용입 깊이와 직접적인 연관이 있습니다. 다른 유효 답변인 &#x27;용입 P는 판두께의 20% 이상&#x27;은 용입량에 대한 별도의 기준이지만, 질문의 초점이 각도에 맞춰져 있으므로 정답에서 제외됩니다.</p>
+        <p class="evidence"><b>근거</b><br>1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p101-c01 · 슬라이드 101 · distance=0.6416281461715698</div><pre>[제목] 생산본부- 품질보증팀
+CO2 용접 품질 관리 [용접]
+관리 항목 | CO2 용접점 외관관리 | 관리기준 (규격) | 용접 표준 (MS SPEC 191-81)
+점검항목 | ①용입량-겹치기 용접 |  | ②용입량-PLUG 용접 |
+검사
+기준 |  |  |  |
+| 1.
+각 장 ℓ은 박판측 판두께(t) 이상
+2.
+r은 ℓ의 50% 이내 |  | 1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚
+2) 용입 P는 판두께의 20% 이상 |
+점검항목 | ③용접길이 | ④언더컷 | ⑤균열 및 슬래그 | ⑥용접강도
+검사
+기준 |  |  |  |</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 9</span>
+        <span>다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</span>
+        <code>title_body-q10</code></div>
+      <h3>다음 중 &#x27;프로세스 사인 오프 단계&#x27;에서 수행되지 않는 활동은 무엇인가?</h3>
+      <ol><li>입찰 및 고객사 개발 가능성 검토</li><li>양산 후 품질 검증 보고서 작성</li><li>초기 설계 도면 최종 승인</li><li>공급업체와의 가격 협상 진행</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 입찰 및 고객사 개발 가능성 검토</div>
+        <p><b>해설</b><br>입찰 및 고객사 개발 가능성 검토는 &#x27;프로세스 사인 오프 단계&#x27;가 아닌 초기 수주 및 기획 단계에서 수행되는 활동입니다. 반면 나머지 항목들은 PSO(Process Sign Off) 단계에서 구체적으로 언급된 활동들입니다.</p>
+        <p class="evidence"><b>근거</b><br>M-4 단계에서 &#x27;고객사로부터 입찰 요청서 접수받아 입찰 실시&#x27; 및 &#x27;사양 확인하여 당사 개발 가능 여부 검토&#x27;가 수행되며, 이는 PSO 단계 이전의 활동입니다. PSO 단계에서는 ISIR 승인 준비, 공정감사, 풀캐파 점검 등이 수행됩니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p050-c01 · 슬라이드 50 · distance=1.1207300424575806</div><pre>[제목] 생산본부-생산관리팀
+2-3 신차개발 Process
+신차업무 흐름 ①
+양산 및 사후관리
+수주 및 기획
+제품설계 및 시작개발
+양산준비 및 선행양산
+M-4 | M-2 | M | M+2 | M+4 | M+6 | M+8 | M+10 | M+12 | M+14 | M+16 | M+18 | M+20 | SOP
+M-4
+M-3
+M+1
+입찰
+고객사로부터 입찰 요청서 접수받아 입찰 실시
+사양 확인하여 당사 개발 가능           여부 검토
+CFT 구성</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p108-c01 · 슬라이드 108 · distance=1.1500663757324219</div><pre>[제목] 개발본부- 부품개발팀
+PSO
+세부 활동항목
+현 재
+개 정
+▣ PSO 단계별 업무 개요
+5
+M
+ISIR 승인 준비 점검
+(공정감사)
+ISIR 제출 서류 사전 점검
+- 초도품보증서, 신뢰성 성적서 등
+공정감사 참여 및 점검결과 입력
+新ISIR 시스템 구매항목 제출 점검
+- 품질확보계획, 제조공정승인, 공정감사
+공정감사 참여 및 점검결과 입력
+14
+풀캐파
+연속생산 공정점검
+생산능력 (UPH, 가동율 합격율, Cpk)
+공정(특별특성,F/PROOF,자동검사)
+과거차, 작업자, 외주품, 파렛트 점검
+생산능력 (UPH, 가동율 합격율)</pre></div></div>
+    </article>
+    </div></section></div>
+    </section>
+    
+    <section class="panel-section" id="experiment-4">
+      <div class="panel">
+        <h2>layout_aware (size=400, overlap=1)</h2>
+        <p class="muted">퀴즈 10개 · 실패 0개 · Recall@K 0.967 · Precision@K 0.260 · MRR 1.000</p>
+      </div>
+      <div class="topic-list"><section class="topic-group"><h3>주제: 프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 1</span>
+        <span>프로젝션 용접에서 이종 재질 접합이 어려운 주된 물리적 메커니즘은 무엇인가?</span>
+        <code>layout_aware-q01</code></div>
+      <h3>프로젝션 용접에서 서로 다른 재질을 접합할 때 열팽창 계수 차이로 인해 발생하는 주요 물리적 현상은 무엇인가?</h3>
+      <ol><li>열전도도 차이로 인한 국부적 과열</li><li>열팽창 계수 차이로 인한 변형</li><li>전기적 저항 불일치로 인한 스파크 발생</li><li>밀도 차이로 인한 접합면 공극 형성</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 열팽창 계수 차이로 인한 변형</div>
+        <p><b>해설</b><br>프로젝션 용접에서 이종 재질 접합이 어려운 주된 원인은 각 재질의 열팽창 계수 차이로 인해 용접 과정에서 변형이 발생하기 때문입니다. 이는 참고자료에서 언급된 &#x27;이종 재질의 접합이 곤란&#x27;이라는 단점과 연결되며, 열적·기계적 특성 불일치로 인한 문제를 반영합니다. 다른 유효 답변들은 용접 과정에서 발생할 수 있는 추가적 문제이지만, 가장 근본적인 물리적 메커니즘은 열팽창 계수 차이입니다.</p>
+        <p class="evidence"><b>근거</b><br>이종 재질의 접합이 곤란</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p099-c02 · 슬라이드 99 · distance=0.8830999135971069</div><pre>[제목] 생산본부- 품질보증팀
+강판
+[표 헤더] 장점 | 작업속도 빨라 대량 생산 적합
+용접봉, 플럭스 등 불필요
+열의 집중성이 좋고 열손실 적음
+가압 효과로 조직이 치밀
+작업자의 숙련이 필요 없음
+열변형이 잔류응력, 산화가 적음
+[표 행] 단점 | 적당한 비파괴 검사가 어려움
+설비 복잡하고 고가
+용접부의 위치,형상 등 영향 큼
+이종 재질의 접합이 곤란
+용접기의 용량에 비해 용접능력한정되며 재질,판두께 등 재료 영향이 큼
+1차 전원
+너겟
+2차 케이블
+-종류: 점 용점, 프로젝션 용접, 심 용접
+▶ 프로젝션 용접의 원리
+▣발열량(Q) | =0.24 × 전류2 × 저항 × 통전시간 = 0.24 I2RT (cal)
+※ 4대 조건 | 전류, 가압력, 통전시간, 엠보 품질</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 2</span>
+        <span>프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?</span>
+        <code>layout_aware-q02</code></div>
+      <h3>다음 중 &#x27;프레스의 동력원에 따라 분류할 때, 유체를 이용해 슬라이드를 작동시키는 방식은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>유압 프레스</li><li>공압 프레스</li><li>유압프레스</li><li>유체 압력을 이용한 프레스</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 공압 프레스</div>
+        <p><b>해설</b><br>공압 프레스는 유체 중 공기를 이용하는 방식으로, 참고자료에는 유체의 압력을 이용한다는 설명만 존재하며 공기 압력에 대한 언급이 없음.</p>
+        <p class="evidence"><b>근거</b><br>유압프레스에 적합 유체을 압력을 이용하여 슬라이드를 작동</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p016-c01 · 슬라이드 16 · distance=0.6594204902648926</div><pre>[제목] 생산본부-생산관리팀
+1-2 차체 제조공정_프레스/금형
+프레스의 분류
+동력원에 따른 분류
+프레임 형식에 따른 분류
+유압 프레스
+C형 프레임 프레스
+H형 프레임 프레스
+4주형 프레임 프레스
+기계 프레스
+소형(200T 이하)에 적합
+앞 벌어짐 발생 우려
+중대형(300T 이상)에 적합
+안정적인 구조
+특수목적(소형)
+유압프레스에 적합
+유체을 압력을 이용하여 슬라이드를 작동
+기계력을 이용하여 크랭크 등을 회전시켜 슬라이드를 작동</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 3</span>
+        <span>다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?</span>
+        <code>layout_aware-q03</code></div>
+      <h3>다음 중 &#x27;다음 중 &#x27;종합효율 평가 척도&#x27;에 해당하지 않는 것은?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>초기수율</li><li>부하시간</li><li>정지시간</li><li>가동시간</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 초기수율</div>
+        <p><b>해설</b><br>초기수율은 품질 관리 지표로, &#x27;종합효율 평가 척도&#x27;는 설비 가동 시간 및 작업량과 관련된 지표를 포함하기 때문입니다.</p>
+        <p class="evidence"><b>근거</b><br>종합효율은 설비를 성능, 시간, 품질면으로 얼마나 효율적으로 관리하였는가를 종합적으로 평가하는 척도로, 소요된 모든 공수에 대한 정상적으로 작업된 공수의 비율을 포함합니다. 반면 초기수율은 품질 Loss의 한 요소로 별도로 분류됩니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p057-c01 · 슬라이드 57 · distance=1.0070258378982544</div><pre>[제목] 생산본부-생산관리팀
+2-4 생산관리 세부업무
+종합효율 용어
+종합효율
+설비를 성능, 시간, 품질면으로 얼마나 효율적으로 관리하였는가를 종합적으로 평가하는 척도
+소요된 모든 공수에 대한 정상적으로 작업된 공수의 비율
+[표 헤더] 기호 | 용어 | 의미
+[표 행] A | 부하시간 | 생산계획상 가동해야 할 시간
+(조업시간) – (계획정지시간)
+[표 헤더] 기호 | 용어 | 의미
+[표 행] B | 정지시간 | 설비의 가동이 돌발 중단된 시간
+[표 헤더] 기호 | 용어 | 의미
+[표 행] C | 가동시간 | 정지시간을 제외한 부하시간
+[표 헤더] 기호 | 용어 | 의미
+[표 행] D | 이론 C/T | 표준조건하에서의 단위작업시간
+[표 헤더] 기호 | 용어 | 의미
+[표 행] E | 생산량 | 생산계획상 가동해야 할 시간</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p059-c01 · 슬라이드 59 · distance=1.1260178089141846</div><pre>[제목] 생산본부-생산관리팀
+2-4 생산관리 세부업무
+설비 Loss 분석 (6대 Loss)
+종합효율 관리 적용대상
+Bottle Neck 공정:                           공정 중 C/T가 가장 느려 병목현상을 유발하는 공정
+설비수가 많은 병렬공정
+배치인원이 많은 공정
+가치
+가동시간
+불량, 수정
+초기수율
+불량Loss
+정비가동시간
+순간정지
+속도저하
+속도Loss
+가동시간
+부하시간
+고장
+기종교체
+정지Loss
+조업시간
+계획정지
+관리착오
+관리Loss
+6대 Loss</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 4</span>
+        <span>피딩 공정에서 소재 표면의 스크래치나 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력과 관련된 측정 항목은 무엇인가?</span>
+        <code>layout_aware-q04</code></div>
+      <h3>피딩 공정에서 롤 마크 발생을 방지하기 위해 주기적으로 점검해야 하는 롤의 물리적 조건 중 압력 관련 측정 항목은 무엇인가?</h3>
+      <ol><li>피딩 롤 압력 게이지 점검</li><li>피딩 롤 슬립 방지 장치 작동 확인</li><li>피딩 롤 표면 온도 측정</li><li>피딩 롤 회전 속도 조정</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 피딩 롤 압력 게이지 점검</div>
+        <p><b>해설</b><br>피딩 롤 압력 게이지 점검은 롤 압력 부족으로 인한 슬립 현상과 롤 마크 발생을 방지하기 위한 핵심 관리 항목입니다. 다른 유효 답변 중 &#x27;블랭킹 라인 롤 압력 점검&#x27;은 동일한 압력 점검 항목이지만, &#x27;피딩 롤 표면 거칠기 상태 점검&#x27;은 압력과는 무관한 표면 상태 관리 항목입니다.</p>
+        <p class="evidence"><b>근거</b><br>① 피딩 롤 표면 거칠기 상태 점검 ② 피딩 롤 압력 게이지 점검</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p096-c01 · 슬라이드 96 · distance=0.5230157375335693</div><pre>[제목] 생산본부- 품질보증팀
+블랭킹 라인 품질 관리 [프레스]
+[표 헤더] 관리 항목 |  | 롤 마크/스크레치 | 품질 영향 | 판넬 외관불량(폐기 및 리워크 대응 손실예상) |
+[표 행] 현상 | ① 롤 마크 : 피딩공정 롤 압력 부족시 슬립현상
+② 스크래치 : 피딩공정 롤 표면 마모 |  |  | 관리
+내용 | ① 피딩 롤 표면 거칠기 상태 점검
+② 피딩 롤 압력 게이지 점검
+[표 헤더] 관리 항목 |  | 롤 마크/스크레치 | 품질 영향 | 판넬 외관불량(폐기 및 리워크 대응 손실예상) |
+[표 행] 점검
+방법 | ① 피딩 롤 표면 거칠기 상태 점검(기준 없을것)
+② 롤(3종류) 교체주기 설정 : 1회/2년
+③ 블랭킹 라인 롤 압력 점검(1회/주) |  |  | 점검 주기 | 항목별 점검주기 준수</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 5</span>
+        <span>차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?</span>
+        <code>layout_aware-q05</code></div>
+      <h3>다음 중 &#x27;차체 CTR FLR 및 BACK PNL과 체결되어 후방부 플로어를 구성하며, 비틀림 강성과 후방 충돌 성능을 개선하고, 뒷좌석 승객 공간 및 화물 적재 공간을 확보하며, RR SEAT 및 RR SEAT BELT 체결 기능을 수행하는 부품은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>PNL ASSY-COWL COMPL</li><li>PNL ASSY-RR FLR COMPL</li><li>PNL ASSY-QTR INR COMPL</li><li>PNL ASSY-CTR CROSS COMPL</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — PNL ASSY-COWL COMPL</div>
+        <p><b>해설</b><br>PNL ASSY-COWL COMPL은 전방부 구조물로, 비틀림 강성 및 환기 덕트 기능을 수행하지만 후방부 플로어 구성이나 RR SEAT 체결 기능과 무관합니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 4에서 PNL ASSY-COWL COMPL은 프런트 윈드쉴드, 와이퍼 링키지 등과 연결되며 후방부 플로어 구성과 무관함이 명시됨.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p139-c01 · 슬라이드 139 · distance=0.34421074390411377</div><pre>[제목] 개발본부- 제품설계팀
+부품구조 및 기능
+7-1)  PNL ASSY-RR FLR COMPL 위치
+7-2)  PNL ASSY-RR FLR COMPL 기능
+- 차체 CTR FLR, BACK PNL과 체결되어 FLOOR 후방부를 구성하며 차체의 비틀림, 강성    (정강성/동강성/판넬/입력점) 및 후방 충돌 성능을 만족
+- 뒷자석 승객의 및 화물 적재 공간 확보
+- RR SEAT 및 RR SEAT BELT 체결
+- 주요 장착 파트      ① RR SEAT ② RR SEAT BELT ③ FUEL TANK ④ RR SUSPENSION ⑤ MUFFLER
+⑥ BACK PNL ⑦ BACK BEAM ⑧ SPARE TIRE ⑨ WIR’G</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p085-c07 · 슬라이드 85 · distance=0.6751484870910645</div><pre>[제목] 생산본부- 품질보증팀
+[표 헤더] 7 |  | 품 명 | PNL ASSY-CTR CROSS COMPL
+[표 행] |  |  | ② 승객 및 화물지지
+[표 헤더] 7 |  | 품 명 | PNL ASSY-CTR CROSS COMPL
+[표 행] 8 |  | 품 명 | PNL ASSY-RR FLR COMPL
+[표 헤더] 7 |  | 품 명 | PNL ASSY-CTR CROSS COMPL
+[표 행] |  | 기 능 | ① RR SEAT 체결
+[표 헤더] 7 |  | 품 명 | PNL ASSY-CTR CROSS COMPL
+[표 행] |  |  | ② 승객 및 화물지지
+[표 헤더] 7 |  | 품 명 | PNL ASSY-CTR CROSS COMPL
+[표 행] |  |  | ③ 예비 타이어 체결</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p138-c01 · 슬라이드 138 · distance=0.6756572723388672</div><pre>[제목] 개발본부- 제품설계팀
+부품구조 및 기능
+6-1)  PNL ASSY-QTR INR COMPL 위치
+6-2)  PNL ASSY-QTR INR COMPL 기능
+- RR SUSPENSION으로부터의 입력을 지탱
+- RR WINDOW 지지
+- RR SEAT BELT 체결 - 노면으로부터 진흙,물 등 이물질 침입방지 기능 → W/HSE,QTR INR 기능 HOLE 최소화
+- 주요 장착 파트      ① RR WHEEL GUARD ② RR SEAT BELT ③ RR WINDOW ④ RR SUSPENSION
+⑤ CAB ⑥ WIR’G ⑦ FUEL HOUSING ⑧ LUGGAGE</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p133-c01 · 슬라이드 133 · distance=0.67573082447052</div><pre>[제목] 개발본부- 제품설계팀
+부품구조 및 기능
+1-1)  PNL ASSY-COWL COMPL 위치
+1-2)  PNL ASSY-COWL COMPL 기능
+- FR PLR LH/RH 사이를 연결하는 횡부재로 비틀림 강성에 대해 중요한 역할을 담당
+- CLOSE TYPE과 OPEN TYPE이 있고 구조결정은 WIPER LINKAGE MODULE등의    PACKAGE L/OUT 및 STYL’G에 의해 결정 됨.
+- 차 실내로 외기를 도입하여 실내의 환기를 위한 덕트 기능 및 빗물등의 배수로 역할을 담당
+- 주요 장착 파트      ① 프런트 윈드쉴드 ② 후드 힌지 ③ 와이퍼 링키지 ④ 블로워 덕트 ⑤ 브레이크/클러치 페달
+⑥ CRASH PAD MODULE</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 6</span>
+        <span>스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?</span>
+        <code>layout_aware-q06</code></div>
+      <h3>다음 중 &#x27;스마트팩토리에서 Big Data 분석을 통해 이상 징후를 사전 포착하고 데이터 축적, IoT 기반 품질관리 자동화, 설비관리 등을 연계하여 생산 시스템의 지속적 개선과 이상 차단을 가능하게 하는 순환적 메커니즘은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>Virtuous cycle: 이상 징후 포착 → 데이터 축적 → IoT 기반 품질관리 자동화 → 설비관리 연계</li><li>Big Data 분석을 통한 이상 신호 감지 및 예방 보전</li><li>Fool Proof 시스템을 통한 작업자 실수 방지</li><li>LOT 기반 품질이력관리시스템을 통한 실시간 모니터링 및 추적</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 3번 — Fool Proof 시스템을 통한 작업자 실수 방지</div>
+        <p><b>해설</b><br>Fool Proof 시스템은 작업자 오류 방지를 위한 물리적/소프트웨어적 장치이지만, Big Data 분석, IoT 기반 자동화, 데이터 축적 등 순환적 메커니즘과 직접적인 연관성이 없습니다. 참고자료 5에 등장하지만, 해당 메커니즘의 핵심 요소로 언급되지 않습니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 1의 &#x27;Virtuous cycle&#x27; 및 &#x27;Big Data를 분석 하여 이상 신호 감지&#x27;, 자료 2의 &#x27;LOT 기반 품질이력관리시스템&#x27; 관련 설명. Fool Proof는 자료 5의 &#x27;작업자 실수 방지&#x27;에만 한정됨</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p150-c01 · 슬라이드 150 · distance=0.5388219952583313</div><pre>[제목] 기술연구소- 비전연구팀
+주요업무(3)
+스마트팩토리 구축
+Big Data를 통해 이상 징후를 사전 포착, 관리하여 생산 가동률 향상
+Big Data
+축적된 Data를 바탕으로
+생산 시스템을 통계 관리
+이상 발생
+사전 차단
+Big Data를 분석 하여
+이상 신호 감지 및 생산 최적화
+예방 보전
+Big Data의 활용을 통한
+이상 징후 사전 차단, 관리
+예방 보전
+Virtuous
+cycle
+이상 징후 포착
+데이터
+축척
+IoT
+품질관리
+자동화를 통해 신속/정밀한 검사를 시행
+제조 현장의 품질 일원화
+설비관리
+사람을 넘어선 정밀도/스피드로 변화를 센싱하고 데이터를 축척
+공정
+데이터
+수집
+물류 관리
+차량 위치 정보와 이동 시간
+예측으로 효율적인 배차 관리
+생산 이력 관리
+제품의 모든 생산 이력을 원격으로 실시간 모니터링 관리
+안전관리</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p156-c01 · 슬라이드 156 · distance=0.8923051953315735</div><pre>[제목] 기술연구소- 비전연구팀
+관련시스템(6)
+통합관리시스템
+통합 관제시스템
+LOT기반 품질이력관리시스템
+개
+요
+개
+요
+제품의 소재입고, 생산, 품질검사, 출고, 납품까지의 모든 이력에 대한
+실시간 원격 모니터링 관리가 가능한 시스템
+차체 부품 조립 시, 각 공정 별 용접, 비전검사 및 제품 상태정보를 LOT별로
+수집 가능한 품질이력관리시스템
+효과
+효과
+ㆍ신속한 생산 데이터 공유를 통한 생산성 향상 효과
+ㆍ빅데이터 클라우드를 통한 관리 기능 향상 효과
+ㆍ각 공정 별 용접, 비전검사, 제품상태에 대한 관리 및 LOT 추적 가능
+101년을 생각하는 자동차 부품 전문기업</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p030-c01 · 슬라이드 30 · distance=0.979392409324646</div><pre>[제목] 생산본부-생산관리팀
+1-2 차체 제조공정_품질관리
+양산제품 품질관리 ②
+[제품 관리계획서]
+FOOL PROOF
+Fool(바보) + Proof(검증) : 바보도 할 수 있는 → 절대 실수할 수 없는 실수 방지장치, 안전 설계 등의 의미 포함
+오조립, 하드웨어 누락 등 작업자의 능률 미숙으로 인해 생길 수 있는 불량을 근접 센서, 순차로딩, 인터락 등 다양한 수단을 통해 미연에 방지
+[표 헤더] 관리 항목 |  |  |  | 특별 | 관리 기준 |  |  |
+[표 행] NO | 제품 | 공정 |  | 특성 | 규 격 | 확인방법 | 주 기 | 관리방안</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 7</span>
+        <span>ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?</span>
+        <code>layout_aware-q07</code></div>
+      <h3>다음 중 &#x27;ERP를 활용하여 실시간으로 확인할 수 있는 생산정보 중 작업지시와 직접적으로 연관된 시스템은 무엇인가?&#x27;에 해당하지 않는 것은?</h3>
+      <ol><li>MES 시스템</li><li>POP 시스템</li><li>ERP를 통한 작업지시</li><li>EKP(Enterprise Knowledge Portal)</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 4번 — EKP(Enterprise Knowledge Portal)</div>
+        <p><b>해설</b><br>EKP(Enterprise Knowledge Portal)는 기업 내/외부 정보 통합 및 지식관리 시스템으로, 생산현장의 실시간 작업지시와 직접적인 연관성이 없습니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 4의 EKP는 전자결재, 지식수집/공유, 문서관리 등 지식관리 기능에 중점을 둔 시스템이며, 생산현장의 실시간 작업지시 관리 기능이 언급되지 않았습니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p073-c01 · 슬라이드 73 · distance=0.9043935537338257</div><pre>[제목] 생산본부-생산관리팀
+2-4 생산관리 세부업무
+전자결재
+게시판
+전자우편, 사내통신
+지식등록, 승인, 평가
+지식수집, 공유
+지식전문가, Q&amp;A
+ekp.wamc.co.kr
+전자결재
+지식관리
+EKP(Enterprise Knowledge Portal): 기업지식포털
+기업 내/외부정보를 인터넷을 기반으로 통합하는 시스템
+전자문서관리
+커뮤니티/일정관리
+문서등록
+문서관리
+문서폐기
+일정관리
+사내 자원관리
+전자설문
+동호회</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 8</span>
+        <span>다음 중 &#x27;ESG 사회 이슈 관련 법령&#x27;에 해당하지 않는 것은?</span>
+        <code>layout_aware-q08</code></div>
+      <h3>ESG 사회(Social) 이슈 중 &#x27;강제노동/아동노동&#x27;과 연결된 법령이면서 &#x27;근로조건&#x27; 이슈의 관계법령에 포함되지 않은 것은 무엇인가?</h3>
+      <ol><li>고령자고용촉진법</li><li>아동복지법</li><li>산업재해보상법</li><li>유해물질관리법</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 2번 — 아동복지법</div>
+        <p><b>해설</b><br>아동복지는 &#x27;강제노동/아동노동&#x27; 이슈에 해당하는 법령이며, &#x27;근로조건&#x27; 이슈의 법령 목록에는 포함되지 않습니다. 근로조건 관련 법령은 채용 공정성, 파견 근로자 보호, 외국인 근로자 고용, 기간제 근로자 보호 등에 초점을 맞추고 있습니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 1의 &#x27;Issue | 법령&#x27; 표에서 &#x27;근로조건&#x27; 행에 &#x27;아동복지법&#x27;이 명시되지 않았으며, &#x27;강제노동/아동노동&#x27; 행에 포함되어 있습니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p164-c01 · 슬라이드 164 · distance=0.8453050851821899</div><pre>[제목] 기술연구소- ESG 경영팀
+이슈별 관계법령(2)
+Social
+[표 헤더] Issue | 법령
+[표 행] 인권 | 사회보장기본법, 남녀고용평등법, 장애인차별금지 및 권리구제 등에 관한 법률, 양성평등기본법, 직업안정법
+[표 헤더] Issue | 법령
+[표 행] 강제노동/아동노동 | 근로기준법, 근로자복지기본법, 남녀고용평등과 일.가정 양립지원에 관한 법률, 최저임금법, 고용정책기본법, 근로자 퇴직급여 보장법, 아동복지법
+[표 헤더] Issue | 법령
+[표 행] 근로조건 | 채용절차의 공정화에 관한 법률, 파견근로자 보호 등에 관한 법률, 외국인 근로자의 고용 등에 관한 법률, 기간제 및 단시간 근로보호 등에 관한 법률</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 9</span>
+        <span>CO2 용접에서 판두께가 3mm 미만일 때, 용접부의 용입 깊이와 관련된 각도 기준은 어떻게 되는가?</span>
+        <code>layout_aware-q09</code></div>
+      <h3>CO2 용접에서 판두께가 3mm 미만인 경우, 용입 깊이와 관련된 용접 각도의 허용 범위는 어떻게 되는가?</h3>
+      <ol><li>30˚≤θ≤60˚</li><li>15˚≤θ≤45˚</li><li>60˚≤θ≤90˚</li><li>θ=30˚ 고정</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 30˚≤θ≤60˚</div>
+        <p><b>해설</b><br>판두께가 3mm 미만일 때 CO2 용접의 용입 깊이와 관련된 각도 기준은 30˚에서 60˚ 사이로 규정되어 있습니다. 다른 유효 답변들은 동일한 조건에서 적용되는 추가 기준이지만, 질문의 초점은 용접 각도에 맞춰져 있습니다.</p>
+        <p class="evidence"><b>근거</b><br>1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p101-c01 · 슬라이드 101 · distance=0.6491047739982605</div><pre>[제목] 생산본부- 품질보증팀
+CO2 용접 품질 관리 [용접]
+관리 항목 | CO2 용접점 외관관리 | 관리기준 (규격) | 용접 표준 (MS SPEC 191-81)
+[표 헤더] 점검항목 | ①용입량-겹치기 용접 |  | ②용입량-PLUG 용접 |
+[표 행] 검사
+기준 |  |  |  |
+[표 헤더] 점검항목 | ①용입량-겹치기 용접 |  | ②용입량-PLUG 용접 |
+[표 행] | 1. 각 장 ℓ은 박판측 판두께(t) 이상
+2. r은 ℓ의 50% 이내 |  | 1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚             
+2) 용입 P는 판두께의 20% 이상 |</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p033-c03 · 슬라이드 33 · distance=0.8306690454483032</div><pre>[제목] 생산본부-생산관리팀
+[표 헤더] 점검항목 | ①용입량-겹치기 용접 |  | ②용입량-PLUG 용접 |
+[표 행] 검사
+기준 |  |  |  |
+[표 헤더] 점검항목 | ①용입량-겹치기 용접 |  | ②용입량-PLUG 용접 |
+[표 행] | 1. 각 장 ℓ은 박판측 판두께(t) 이상
+2. r은 ℓ의 50% 이내 |  | 1) t〈 3mm일 때 D=6mm, 30˚≤θ≤60˚             
+2) 용입 P는 판두께의 20% 이상 |
+[표 헤더] 점검항목 | ①용입량-겹치기 용접 |  | ②용입량-PLUG 용접 |
+[표 행] 점검항목 | ③용접길이 | ④언더컷 | ⑤균열 및 슬래그 | ⑥용접강도
+[표 헤더] 점검항목 | ①용입량-겹치기 용접 |  | ②용입량-PLUG 용접 |
+[표 행] 검사
+기준 |  |  |  |</pre></div></div>
+    </article>
+    </div></section><section class="topic-group"><h3>주제: 다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</h3><div class="quiz-list">
+    <article class="quiz-card">
+      <div class="meta"><span class="badge">문제 10</span>
+        <span>다음 중 &#x27;프로세스 사인 오프 단계&#x27;에 해당하지 않는 것은?</span>
+        <code>layout_aware-q10</code></div>
+      <h3>&#x27;프로세스 사인 오프 단계&#x27;(M~M+20)에서 수행되지 않는 활동은 무엇인가? 단, 수주 확정 전 단계(M-4~M-2)에 속하는 활동을 제외하고, 공정감사 참여, 풀캐파 연속생산 점검, 양산 초기 이중점검과 무관한 활동을 대상으로 한다.</h3>
+      <ol><li>입찰서 작성: 기술영업팀</li><li>ISIR 승인 준비 점검: 품질관리팀</li><li>풀캐파 생산라인 설계: 설비팀</li><li>양산 초기 작업자 교육: 교육팀</li></ol>
+      <details>
+        <summary>정답·해설 보기</summary>
+        <div class="answer"><b>정답</b> 1번 — 입찰서 작성: 기술영업팀</div>
+        <p><b>해설</b><br>입찰서 작성은 수주 확정 전 단계에서 기술영업팀이 수행하는 업무로, 프로세스 사인 오프(PSO) 단계의 핵심 활동인 공정 점검·감사·양산 준비와 직접적인 연관성이 없습니다. 반면 다른 항목들은 PSO 단계에서 명시된 세부 활동(공정감사, 생산능력 점검, 양산 초기 품질 관리)에 해당합니다.</p>
+        <p class="evidence"><b>근거</b><br>자료 2의 &#x27;입찰서 작성: 기술영업팀&#x27;은 수주 확정 전 단계(M-4~M-2)에 해당하며, 자료 5의 PSO 단계(M~M+20) 활동(공정감사, 풀캐파 점검, 양산 초기 점검)과 구분됩니다.</p>
+      </details>
+      <div class="used-chunks"><b>생성에 사용된 청크</b><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p050-c01 · 슬라이드 50 · distance=1.1215959787368774</div><pre>[제목] 생산본부-생산관리팀
+2-3 신차개발 Process
+신차업무 흐름 ①
+양산 및 사후관리
+수주 및 기획
+제품설계 및 시작개발
+양산준비 및 선행양산
+M-4 | M-2 | M | M+2 | M+4 | M+6 | M+8 | M+10 | M+12 | M+14 | M+16 | M+18 | M+20 | SOP
+M-4
+M-3
+M+1
+입찰
+고객사로부터 입찰 요청서 접수받아 입찰 실시
+사양 확인하여 당사 개발 가능           여부 검토
+CFT 구성
+CFT(Cross Functional Team)상호기능팀: 조직 내의 서로 다른 부서와 서로 다른 계층의 사람들로 구성된 소규모 단위의 집단
+수주 확정
+경쟁입찰 시스템을 통해 수주 확정 시 고객사로부터 정식으로 개발요청 통보 받음
+입찰서 작성: 기술영업팀
+공법/투자비검토
+설비 ㅣ 생산기술팀</pre></div><div class="used-chunk"><div class="chunk-meta">ajin_training_250416-p108-c01 · 슬라이드 108 · distance=1.1339147090911865</div><pre>[제목] 개발본부- 부품개발팀
+PSO
+세부 활동항목
+현 재
+개 정
+▣ PSO 단계별 업무 개요
+5
+M
+ISIR 승인 준비 점검
+(공정감사)
+ISIR 제출 서류 사전 점검
+- 초도품보증서, 신뢰성 성적서 등
+공정감사 참여 및 점검결과 입력
+新ISIR 시스템 구매항목 제출 점검
+- 품질확보계획, 제조공정승인, 공정감사
+공정감사 참여 및 점검결과 입력
+14
+풀캐파
+연속생산 공정점검
+생산능력 (UPH, 가동율 합격율, Cpk)
+공정(특별특성,F/PROOF,자동검사)
+과거차, 작업자, 외주품, 파렛트 점검
+생산능력 (UPH, 가동율 합격율)
+공정(특별특성,F/PROOF,자동검사)
+2차사 점검결과 입력
+15
+양산
+6
+양산초기 완성차
+이중점검/비직행
+결과 확인
+양산초기 이중점검/비직행 개선
+문제점 및 개선내용 입력
+PSO 신규반영
+16
+양산초기</pre></div></div>
+    </article>
+    </div></section></div>
+    </section>
+    
+  </main>
+  <script>
+    function showPanel(id) {
+      document.querySelectorAll('.panel-section').forEach(function (section) {
+        section.classList.toggle('active', section.id === id);
+      });
+      document.querySelectorAll('.tab').forEach(function (tab) {
+        tab.classList.toggle('active', tab.getAttribute('href') === '#' + id);
+      });
+      window.location.hash = id;
+    }
+    window.addEventListener('load', function () {
+      var id = window.location.hash.slice(1);
+      if (id && document.getElementById(id)) showPanel(id);
+    });
+  </script>
+</body>
+</html>
