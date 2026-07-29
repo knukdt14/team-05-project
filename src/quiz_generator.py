@@ -240,7 +240,7 @@ def _invoke(
     messages: list[dict],
     max_new_tokens: int = 512,
     *,
-    do_sample: bool = False,
+    do_sample: bool = True,
 ) -> str:
     """Solar API(OpenAI 호환) 채팅 완성 호출."""
     payload = {
